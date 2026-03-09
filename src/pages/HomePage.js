@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
+import { useCart } from '../context/CartContext';
 
 const banners = [
   '/admin/images/banner-1720956851.jpg',
@@ -102,6 +103,7 @@ function HeroSlider() {
 
 function ProductCard({ product }) {
   const [added, setAdded] = useState(false);
+  const { addToCart } = useCart();
   return (
     <div style={{ border:'1px solid #e8e8e8',borderRadius:3,background:'#fff',overflow:'hidden',transition:'box-shadow 0.2s,transform 0.2s',position:'relative' }}
       onMouseEnter={e=>{ e.currentTarget.style.boxShadow='0 4px 20px rgba(0,0,0,0.12)'; e.currentTarget.style.transform='translateY(-3px)'; }}
@@ -127,7 +129,7 @@ function ProductCard({ product }) {
       </Link>
       <div style={{ padding:'8px 14px 14px' }}>
         <button
-          onClick={() => { setAdded(true); setTimeout(()=>setAdded(false),2000); }}
+          onClick={() => { addToCart(product); setAdded(true); setTimeout(()=>setAdded(false),2000); }}
           style={{ width:'100%',background: added ? '#22c55e':'#333',color:'#fff',border:'none',padding:'9px',borderRadius:3,fontSize:13,fontWeight:600,cursor:'pointer',transition:'background 0.2s',letterSpacing:'0.3px' }}>
           {added ? '✓ Added!' : 'Add to Cart'}
         </button>

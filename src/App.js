@@ -7,6 +7,8 @@ import ImportExportPage from './pages/ImportExportPage';
 import ContactPage from './pages/ContactPage';
 import RequestQuotePage from './pages/RequestQuotePage';
 import ServicesPage from './pages/ServicesPage';
+import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
 import './App.css';
 
 function App() {
@@ -20,6 +22,8 @@ function App() {
         <Route path="/request-quote" element={<RequestQuotePage />} />
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/contact-us" element={<ContactPage />} />
+        <Route path="/view-cart" element={<CartPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
       </Routes>
     </Router>
   );

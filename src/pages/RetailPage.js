@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
+import { useCart } from '../context/CartContext';
 
 const retailProducts = [
   { id: 'P66C4CDF72B546', name: 'Canon R100 Mirrorless Camera RF-S 18-45mm F/4.5-6.3 IS STM', img: '/product_img/P66C4CDF72B546/PIMG-066c4cdf72bfbe.png', oldPrice: 10000, newPrice: 8000, rating: 4, emoji: null },
@@ -21,6 +22,7 @@ function Stars({ n }) {
 }
 function ProductCard({ product }) {
   const [added, setAdded] = useState(false);
+  const { addToCart } = useCart();
   const pct = Math.round(((product.oldPrice - product.newPrice) / product.oldPrice) * 100);
   return (
     <div style={{ border:'1px solid #e8e8e8',borderRadius:3,background:'#fff',overflow:'hidden',transition:'box-shadow 0.2s,transform 0.2s' }}
@@ -44,7 +46,7 @@ function ProductCard({ product }) {
       </div>
       <div style={{ padding:'8px 14px 14px',display:'flex',gap:8 }}>
         <button style={{ flex:1,background:added?'#22c55e':'#333',color:'#fff',border:'none',padding:'9px',borderRadius:3,fontSize:13,fontWeight:600,cursor:'pointer',transition:'background 0.2s' }}
-          onClick={() => { setAdded(true); setTimeout(() => setAdded(false), 2000); }}>
+          onClick={() => { addToCart(product); setAdded(true); setTimeout(() => setAdded(false), 2000); }}>
           {added ? '✓ Added!' : 'Add to Cart'}
         </button>
         <button style={{ background:'#f0f4fb',border:'1px solid #ddd',borderRadius:3,padding:'9px 12px',cursor:'pointer',fontSize:16 }}>♡</button>

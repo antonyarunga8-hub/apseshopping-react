@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 
 const categories = [
   { name: 'Electronics', sub: ['Android Mobiles','Mobile Cables','Mobile Chargers','Power Banks','Earphones And Headphones','Tripod','Screen Guards','Memory Cards (SD Cards)','Mobile Cover','Mobile Car Charger','Mixer Grinders','Watches','Speakers','Digital Camera','Mouse'] },
@@ -42,7 +43,7 @@ export default function Layout({ children }) {
   const [cartOpen, setCartOpen] = useState(false);
   const [cityModal, setCityModal] = useState(true);
   const [selectedCity, setSelectedCity] = useState('Select City');
-  const [cartCount] = useState(0);
+  const { cartItems, removeFromCart, cartCount, cartTotal } = useCart();
   const location = useLocation();
   const isActive = (path) => location.pathname === path;
 
@@ -75,13 +76,30 @@ export default function Layout({ children }) {
               <h3 style={{ fontWeight:700,fontSize:16 }}>Shopping Cart</h3>
               <button onClick={() => setCartOpen(false)} style={{ background:'none',border:'none',fontSize:22,cursor:'pointer',color:'#555' }}>×</button>
             </div>
-            <div style={{ flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',color:'#aaa',gap:10 }}>
-              <i className="fas fa-shopping-cart" style={{ fontSize:48 }} />
-              <p style={{ fontSize:14 }}>Your cart is empty</p>
+            <div style={{ flex:1,overflowY:'auto' }}>
+              {cartItems.length === 0 ? (
+                <div style={{ display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',color:'#aaa',gap:10 }}>
+                  <i className="fas fa-shopping-cart" style={{ fontSize:48 }} />
+                  <p style={{ fontSize:14 }}>Your cart is empty</p>
+                </div>
+              ) : (
+                cartItems.map(item => (
+                  <div key={item.id} style={{ display:'flex',gap:10,alignItems:'center',marginBottom:14,paddingBottom:14,borderBottom:'1px solid #f0f0f0' }}>
+                    <div style={{ width:52,height:52,background:'#f9f9f9',borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,border:'1px solid #eee' }}>
+                      {item.img ? <img src={item.img} alt={item.name} style={{ maxWidth:48,maxHeight:48,objectFit:'contain' }} /> : <span style={{ fontSize:28 }}>{item.emoji||'🛍️'}</span>}
+                    </div>
+                    <div style={{ flex:1 }}>
+                      <p style={{ fontSize:12,color:'#333',margin:0,lineHeight:1.4 }}>{item.name.length>35?item.name.slice(0,35)+'...':item.name}</p>
+                      <p style={{ fontSize:12,color:'#2e6dce',fontWeight:700,margin:'3px 0 0' }}>{item.qty} × ₹{item.newPrice.toLocaleString()}</p>
+                    </div>
+                    <button onClick={() => removeFromCart(item.id)} style={{ background:'none',border:'none',color:'#aaa',cursor:'pointer',fontSize:16,padding:2 }}>✕</button>
+                  </div>
+                ))
+              )}
             </div>
             <div style={{ borderTop:'1px solid #eee',paddingTop:14 }}>
               <div style={{ display:'flex',justifyContent:'space-between',fontWeight:700,marginBottom:14,fontSize:15 }}>
-                <span>SUBTOTAL:</span><span>₹0</span>
+                <span>SUBTOTAL:</span><span>₹{cartTotal.toLocaleString()}</span>
               </div>
               <Link to="/view-cart"><button style={{ width:'100%',padding:'11px',background:'#555',color:'#fff',border:'none',fontWeight:700,cursor:'pointer',marginBottom:8,borderRadius:3 }}>View Cart</button></Link>
               <Link to="/checkout"><button style={{ width:'100%',padding:'11px',background:'#2e6dce',color:'#fff',border:'none',fontWeight:700,cursor:'pointer',borderRadius:3 }}>Checkout</button></Link>
