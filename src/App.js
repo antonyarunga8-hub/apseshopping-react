@@ -9,6 +9,8 @@ import RequestQuotePage from './pages/RequestQuotePage';
 import ServicesPage from './pages/ServicesPage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 import './App.css';
 
 function App() {
@@ -24,6 +26,8 @@ function App() {
         <Route path="/contact-us" element={<ContactPage />} />
         <Route path="/view-cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
       </Routes>
     </Router>
   );

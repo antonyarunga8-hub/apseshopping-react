@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 const categories = [
   { name: 'Electronics', sub: ['Android Mobiles','Mobile Cables','Mobile Chargers','Power Banks','Earphones And Headphones','Tripod','Screen Guards','Memory Cards (SD Cards)','Mobile Cover','Mobile Car Charger','Mixer Grinders','Watches','Speakers','Digital Camera','Mouse'] },
@@ -44,6 +45,7 @@ export default function Layout({ children }) {
   const [cityModal, setCityModal] = useState(true);
   const [selectedCity, setSelectedCity] = useState('Select City');
   const { cartItems, removeFromCart, cartCount, cartTotal } = useCart();
+  const { user, logout } = useAuth();
   const location = useLocation();
   const isActive = (path) => location.pathname === path;
 
@@ -119,8 +121,17 @@ export default function Layout({ children }) {
           <button onClick={() => setCityModal(true)} style={{ background:'none',border:'none',color:'#fff',cursor:'pointer',fontSize:12,display:'flex',alignItems:'center',gap:5 }}>
             <i className="fas fa-map-marker-alt" />Locate Me
           </button>
-          <a href="https://apseshopping.com/login" style={{ color:'#fff',display:'flex',alignItems:'center',gap:5,fontSize:12 }}><i className="fas fa-sign-in-alt" />Log In</a>
-          <a href="https://apseshopping.com/register" style={{ color:'#fff',display:'flex',alignItems:'center',gap:5,fontSize:12 }}><i className="fas fa-user-plus" />Register</a>
+          {user ? (
+            <>
+              <span style={{ color:'#fff',fontSize:12,display:'flex',alignItems:'center',gap:5 }}><i className="fas fa-user-circle" />{user.name}</span>
+              <button onClick={logout} style={{ background:'none',border:'1px solid rgba(255,255,255,0.5)',color:'#fff',cursor:'pointer',fontSize:12,padding:'2px 10px',borderRadius:3,display:'flex',alignItems:'center',gap:5 }}><i className="fas fa-sign-out-alt" />Logout</button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" style={{ color:'#fff',display:'flex',alignItems:'center',gap:5,fontSize:12 }}><i className="fas fa-sign-in-alt" />Log In</Link>
+              <Link to="/register" style={{ color:'#fff',display:'flex',alignItems:'center',gap:5,fontSize:12 }}><i className="fas fa-user-plus" />Register</Link>
+            </>
+          )}
           <div style={{ display:'flex',gap:10,marginLeft:4 }}>
             <a href="#" style={{ color:'#fff',fontSize:13 }}><i className="fab fa-facebook-f" /></a>
             <a href="#" style={{ color:'#fff',fontSize:13 }}><i className="fab fa-twitter" /></a>
