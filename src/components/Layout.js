@@ -124,6 +124,7 @@ export default function Layout({ children }) {
           {user ? (
             <>
               <span style={{ color:'#fff',fontSize:12,display:'flex',alignItems:'center',gap:5 }}><i className="fas fa-user-circle" />{user.name}</span>
+              <Link to="/my-orders" style={{ color:'#fff',display:'flex',alignItems:'center',gap:5,fontSize:12 }}><i className="fas fa-box" />My Orders</Link>
               <button onClick={logout} style={{ background:'none',border:'1px solid rgba(255,255,255,0.5)',color:'#fff',cursor:'pointer',fontSize:12,padding:'2px 10px',borderRadius:3,display:'flex',alignItems:'center',gap:5 }}><i className="fas fa-sign-out-alt" />Logout</button>
             </>
           ) : (

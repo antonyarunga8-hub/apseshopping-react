@@ -1,11 +1,29 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { useAuth } from '../context/AuthContext';
+import { useOrders } from '../context/OrderContext';
+
+// ── Niche config ──────────────────────────────────────────────────
+const NICHE_CONFIG = {
+  electronics:    { name: 'ApseElectronics',    color: '#2e6dce', icon: '📱', bg: 'linear-gradient(135deg,#1e40af,#2e6dce)' },
+  fashion:        { name: 'ApseFashion',         color: '#ec4899', icon: '👗', bg: 'linear-gradient(135deg,#be185d,#ec4899)' },
+  kitchen:        { name: 'ApseKitchen',         color: '#f59e0b', icon: '🍳', bg: 'linear-gradient(135deg,#b45309,#f59e0b)' },
+  furniture:      { name: 'ApseFurniture',       color: '#92400e', icon: '🛋️', bg: 'linear-gradient(135deg,#78350f,#b45309)' },
+  jewellery:      { name: 'ApseJewellery',       color: '#7c3aed', icon: '💍', bg: 'linear-gradient(135deg,#5b21b6,#7c3aed)' },
+  agriculture:    { name: 'ApseAgriculture',     color: '#16a34a', icon: '🌾', bg: 'linear-gradient(135deg,#14532d,#16a34a)' },
+  medical:        { name: 'ApseMedical',         color: '#ef4444', icon: '🏥', bg: 'linear-gradient(135deg,#b91c1c,#ef4444)' },
+  wholesale:      { name: 'ApseWholesale',       color: '#166534', icon: '📦', bg: 'linear-gradient(135deg,#14532d,#166534)' },
+};
 
 export default function LoginPage() {
   const { login, user } = useAuth();
+  const { getOrdersByUser } = useOrders();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const nicheKey = searchParams.get('niche');
+  const niCfg = nicheKey ? NICHE_CONFIG[nicheKey] : null;
+
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -30,7 +48,8 @@ export default function LoginPage() {
     setTimeout(() => {
       const result = login(form);
       if (result.success) {
-        navigate('/');
+        // Redirect: niche login → niche page, otherwise home
+        navigate(nicheKey ? `/affiliate/${nicheKey}` : '/');
       } else {
         setError(result.error);
       }
@@ -41,53 +60,69 @@ export default function LoginPage() {
   return (
     <Layout>
       <div style={{ minHeight: '70vh', background: '#f5f7fa', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
-        <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.10)', padding: '44px 40px', width: '100%', maxWidth: 420 }}>
-          {/* Logo / Title */}
-          <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <img src="/assets/images/logo.png" alt="ApseShopping" style={{ height: 52, marginBottom: 12 }} onError={e => e.target.style.display = 'none'} />
-            <h2 style={{ fontSize: 22, fontWeight: 800, color: '#1a1a2e', marginBottom: 4 }}>Welcome Back</h2>
-            <p style={{ fontSize: 13, color: '#888' }}>Login to your ApseShopping account</p>
+        <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.10)', width: '100%', maxWidth: 420, overflow: 'hidden' }}>
+
+          {/* Niche header or default header */}
+          <div style={{ background: niCfg ? niCfg.bg : 'linear-gradient(135deg, #1a1a2e, #0f3460)', padding: '28px 32px', textAlign: 'center' }}>
+            <div style={{ fontSize: 44, marginBottom: 8 }}>{niCfg ? niCfg.icon : '🛍️'}</div>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: '#fff', marginBottom: 4 }}>
+              {niCfg ? `Login to ${niCfg.name}` : 'Welcome Back to ApseShopping'}
+            </h2>
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
+              {niCfg
+                ? `You'll access the ${niCfg.name} experience only`
+                : 'Full access to all 25 platforms & services'}
+            </p>
           </div>
 
-          {error && (
-            <div style={{ background: '#fff5f5', border: '1px solid #feb2b2', borderRadius: 4, padding: '10px 14px', marginBottom: 18, fontSize: 13, color: '#c53030', display: 'flex', alignItems: 'center', gap: 8 }}>
-              ⚠️ {error}
-            </div>
-          )}
+          <div style={{ padding: '28px 32px' }}>
+            {/* Full vs Niche notice */}
+            {niCfg ? (
+              <div style={{ background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: 6, padding: '10px 14px', marginBottom: 20, fontSize: 12, color: '#78350f' }}>
+                🔒 Logging in here gives you <strong>{niCfg.name}</strong> access only.
+                For full ApseShopping access, <Link to="/login" style={{ color: '#2e6dce', fontWeight: 700 }}>login at apseshopping.com</Link>
+              </div>
+            ) : (
+              <div style={{ background: '#f0f4ff', border: '1px solid #bfdbfe', borderRadius: 6, padding: '10px 14px', marginBottom: 20, fontSize: 12, color: '#1e40af' }}>
+                ✅ Logging in here gives you <strong>full access</strong> to all 25 affiliate platforms & services.
+              </div>
+            )}
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: '#444' }}>Email Address *</label>
-              <input
-                type="email" required value={form.email}
-                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                placeholder="you@example.com"
-                style={{ width: '100%', padding: '11px 14px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, boxSizing: 'border-box', outline: 'none', transition: 'border 0.2s' }}
-                onFocus={e => e.target.style.border = '1px solid #2e6dce'}
-                onBlur={e => e.target.style.border = '1px solid #ddd'}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: '#444' }}>Password *</label>
-              <input
-                type="password" required value={form.password}
-                onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                placeholder="Enter your password"
-                style={{ width: '100%', padding: '11px 14px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, boxSizing: 'border-box', outline: 'none', transition: 'border 0.2s' }}
-                onFocus={e => e.target.style.border = '1px solid #2e6dce'}
-                onBlur={e => e.target.style.border = '1px solid #ddd'}
-              />
-            </div>
+            {error && (
+              <div style={{ background: '#fff5f5', border: '1px solid #feb2b2', borderRadius: 4, padding: '10px 14px', marginBottom: 18, fontSize: 13, color: '#c53030' }}>
+                ⚠️ {error}
+              </div>
+            )}
 
-            <button type="submit" disabled={loading}
-              style={{ background: loading ? '#93b4e8' : '#2e6dce', color: '#fff', border: 'none', padding: '13px', borderRadius: 4, fontWeight: 700, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer', letterSpacing: 0.3, transition: 'background 0.2s', marginTop: 4 }}>
-              {loading ? 'Logging in...' : 'Login'}
-            </button>
-          </form>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: '#444' }}>Email Address *</label>
+                <input type="email" required value={form.email}
+                  onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                  placeholder="you@example.com"
+                  style={{ width: '100%', padding: '11px 14px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, boxSizing: 'border-box', outline: 'none' }}
+                  onFocus={e => e.target.style.border = '1px solid #2e6dce'}
+                  onBlur={e => e.target.style.border = '1px solid #ddd'} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: '#444' }}>Password *</label>
+                <input type="password" required value={form.password}
+                  onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                  placeholder="Enter your password"
+                  style={{ width: '100%', padding: '11px 14px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, boxSizing: 'border-box', outline: 'none' }}
+                  onFocus={e => e.target.style.border = '1px solid #2e6dce'}
+                  onBlur={e => e.target.style.border = '1px solid #ddd'} />
+              </div>
+              <button type="submit" disabled={loading}
+                style={{ background: loading ? '#93b4e8' : (niCfg ? niCfg.color : '#2e6dce'), color: '#fff', border: 'none', padding: '13px', borderRadius: 4, fontWeight: 700, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer', marginTop: 4 }}>
+                {loading ? 'Logging in...' : `Login${niCfg ? ` to ${niCfg.name}` : ''}`}
+              </button>
+            </form>
 
-          <div style={{ textAlign: 'center', marginTop: 22, fontSize: 13, color: '#666' }}>
-            Don't have an account?{' '}
-            <Link to="/register" style={{ color: '#2e6dce', fontWeight: 700, textDecoration: 'none' }}>Register here</Link>
+            <div style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: '#666' }}>
+              Don't have an account?{' '}
+              <Link to={`/register${nicheKey ? `?niche=${nicheKey}` : ''}`} style={{ color: '#2e6dce', fontWeight: 700, textDecoration: 'none' }}>Register here</Link>
+            </div>
           </div>
         </div>
       </div>
