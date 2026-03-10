@@ -109,12 +109,11 @@ function ProductCard({ product }) {
       onMouseEnter={e=>{ e.currentTarget.style.boxShadow='0 4px 20px rgba(0,0,0,0.12)'; e.currentTarget.style.transform='translateY(-3px)'; }}
       onMouseLeave={e=>{ e.currentTarget.style.boxShadow=''; e.currentTarget.style.transform=''; }}>
       <Link to={`/product-info/${product.id}`} style={{ textDecoration:'none',color:'inherit' }}>
-        {/* Category badge */}
+        {/* Discount badge */}
         <div style={{ position:'absolute',top:10,left:10,zIndex:2 }}>
-          <Link to={`/category/${product.category}`}
-            style={{ background:'#2e6dce',color:'#fff',fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:2,textDecoration:'none',display:'block' }}>
-            0
-          </Link>
+          <span style={{ background:'#e53e3e',color:'#fff',fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:2,display:'block' }}>
+            {Math.round(((product.oldPrice - product.newPrice) / product.oldPrice) * 100)}% OFF
+          </span>
         </div>
         <div style={{ background:'#f9f9f9',height:200,display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden' }}>
           <img src={product.img} alt={product.name} style={{ maxHeight:185,maxWidth:'90%',objectFit:'contain' }} />
@@ -184,9 +183,9 @@ export default function HomePage() {
       {/* Feature Strip */}
       <div style={{ display:'flex',borderTop:'1px solid #e8e8e8',borderBottom:'1px solid #e8e8e8',background:'#fff' }}>
         {[
-          { icon:'fas fa-shipping-fast', title:'FREE SHIPPING & RETURN', sub:'Free shipping on all orders over $99.' },
-          { icon:'fas fa-dollar-sign', title:'MONEY BACK GUARANTEE', sub:'100% money back guarantee' },
-          { icon:'fas fa-clock', title:'ONLINE SUPPORT 24/7', sub:'Lorem ipsum dolor sit amet.' },
+          { icon:'fas fa-shipping-fast', title:'FREE SHIPPING & RETURN', sub:'Free shipping on all orders over ₹10,000.' },
+          { icon:'fas fa-rupee-sign', title:'MONEY BACK GUARANTEE', sub:'100% money back guarantee' },
+          { icon:'fas fa-clock', title:'ONLINE SUPPORT 24/7', sub:'Mon–Sat 9AM–6PM | 24hr online support.' },
         ].map((f,i) => (
           <div key={i} style={{ flex:1,display:'flex',alignItems:'center',gap:16,padding:'22px 28px',borderRight: i<2?'1px solid #e8e8e8':'none' }}>
             <div style={{ width:56,height:56,borderRadius:'50%',border:'2px solid #e8e8e8',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>

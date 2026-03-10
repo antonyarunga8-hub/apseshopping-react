@@ -42,7 +42,7 @@ const cities = [
 export default function Layout({ children }) {
   const [catOpen, setCatOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  const [cityModal, setCityModal] = useState(true);
+  const [cityModal, setCityModal] = useState(() => !localStorage.getItem('apse_city_dismissed'));
   const [selectedCity, setSelectedCity] = useState('Select City');
   const { cartItems, removeFromCart, cartCount, cartTotal } = useCart();
   const { user, logout } = useAuth();
@@ -56,13 +56,13 @@ export default function Layout({ children }) {
       {cityModal && (
         <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.6)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center' }}>
           <div style={{ background:'#fff',borderRadius:4,padding:'28px 24px',width:460,maxWidth:'95vw',position:'relative',boxShadow:'0 10px 40px rgba(0,0,0,0.3)' }}>
-            <button onClick={() => setCityModal(false)} style={{ position:'absolute',top:10,right:14,background:'none',border:'none',fontSize:24,cursor:'pointer',color:'#555',lineHeight:1 }}>×</button>
+            <button onClick={() => { localStorage.setItem('apse_city_dismissed','1'); setCityModal(false); }} style={{ position:'absolute',top:10,right:14,background:'none',border:'none',fontSize:24,cursor:'pointer',color:'#555',lineHeight:1 }}>×</button>
             <h3 style={{ fontSize:18,fontWeight:700,marginBottom:18,borderBottom:'1px solid #eee',paddingBottom:12 }}>Select City</h3>
             <select value={selectedCity} onChange={e => setSelectedCity(e.target.value)}
               style={{ width:'100%',padding:'9px 12px',border:'1px solid #ccc',borderRadius:3,fontSize:14,marginBottom:16,appearance:'auto' }}>
               {cities.map(c => <option key={c}>{c}</option>)}
             </select>
-            <button onClick={() => setCityModal(false)}
+            <button onClick={() => { localStorage.setItem('apse_city_dismissed','1'); setCityModal(false); }}
               style={{ background:'#333',color:'#fff',border:'none',padding:'10px 32px',borderRadius:3,fontSize:14,fontWeight:700,cursor:'pointer' }}>
               SEARCH
             </button>
@@ -263,7 +263,7 @@ export default function Layout({ children }) {
               <div style={{ display:'flex',gap:8,alignItems:'center' }}>
                 <i className="fab fa-whatsapp" style={{ color:'#2e6dce',flexShrink:0 }} />
                 <div>
-                  <span style={{ fontSize:12,fontWeight:700,color:'#fff',display:'block' }}>WHATAAPP SERVICE :</span>
+                  <span style={{ fontSize:12,fontWeight:700,color:'#fff',display:'block' }}>WHATSAPP SERVICE :</span>
                   <a href="https://wa.me/918073667950" style={{ color:'#aaa',fontSize:12 }}>8073667950</a>
                 </div>
               </div>
@@ -307,7 +307,7 @@ export default function Layout({ children }) {
           <div>
             <h4 style={{ color:'#fff',fontSize:13,fontWeight:700,textTransform:'uppercase',letterSpacing:'1px',marginBottom:20,paddingBottom:10,borderBottom:'2px solid #2e6dce',display:'inline-block' }}>Customer Service</h4>
             <ul style={{ listStyle:'none',padding:0,margin:0,display:'flex',flexDirection:'column',gap:2 }}>
-              {[['About Us','/about-us'],['Contact Us','/contact-us'],['Customer Login','/login'],['Customer Register','/register'],['Vendor Login','/vendor/login'],['Vendor Register','/vendor/register'],['Sub-Vendor Login','/sub-vendor/login'],['Seller Login','/seller/login'],['Seller Register','/seller/register'],['Import & Export','/import-export']].map(([label,to]) => (
+              {[['About Us','/contact-us'],['Contact Us','/contact-us'],['Customer Login','/login'],['Customer Register','/register'],['Vendor Login','/request-quote'],['Vendor Register','/request-quote'],['Seller Login','/request-quote'],['Seller Register','/request-quote'],['Services & Pre-Owned','/services'],['Import & Export','/import-export']].map(([label,to]) => (
                 <li key={label}>
                   <Link to={to} style={{ color:'#aaa',fontSize:12,lineHeight:2,textDecoration:'none',display:'flex',alignItems:'center',gap:6 }}
                     onMouseEnter={e => e.currentTarget.style.color='#2e6dce'}
