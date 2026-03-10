@@ -1,11 +1,25 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { useAuth } from '../context/AuthContext';
+
+const NICHE_CONFIG = {
+  electronics:  { name: 'ApseElectronics',  color: '#2e6dce', icon: '📱', bg: 'linear-gradient(135deg,#1e40af,#2e6dce)' },
+  fashion:      { name: 'ApseFashion',       color: '#ec4899', icon: '👗', bg: 'linear-gradient(135deg,#be185d,#ec4899)' },
+  kitchen:      { name: 'ApseKitchen',       color: '#f59e0b', icon: '🍳', bg: 'linear-gradient(135deg,#b45309,#f59e0b)' },
+  furniture:    { name: 'ApseFurniture',     color: '#92400e', icon: '🛋️', bg: 'linear-gradient(135deg,#78350f,#b45309)' },
+  jewellery:    { name: 'ApseJewellery',     color: '#7c3aed', icon: '💍', bg: 'linear-gradient(135deg,#5b21b6,#7c3aed)' },
+  agriculture:  { name: 'ApseAgriculture',   color: '#16a34a', icon: '🌾', bg: 'linear-gradient(135deg,#14532d,#16a34a)' },
+  medical:      { name: 'ApseMedical',       color: '#ef4444', icon: '🏥', bg: 'linear-gradient(135deg,#b91c1c,#ef4444)' },
+  wholesale:    { name: 'ApseWholesale',     color: '#166534', icon: '📦', bg: 'linear-gradient(135deg,#14532d,#166534)' },
+};
 
 export default function RegisterPage() {
   const { register, user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const nicheKey = searchParams.get('niche');
+  const niCfg = nicheKey ? NICHE_CONFIG[nicheKey] : null;
   const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', confirm: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,9 +43,9 @@ export default function RegisterPage() {
     if (form.password.length < 6) { setError('Password must be at least 6 characters.'); return; }
     setLoading(true);
     setTimeout(() => {
-      const result = register({ name: form.name, email: form.email, phone: form.phone, password: form.password });
+      const result = register({ name: form.name, email: form.email, phone: form.phone, password: form.password, nicheSource: nicheKey || null });
       if (result.success) {
-        navigate('/');
+        navigate(nicheKey ? `/affiliate/${nicheKey}` : '/');
       } else {
         setError(result.error);
       }
@@ -56,12 +70,28 @@ export default function RegisterPage() {
   return (
     <Layout>
       <div style={{ minHeight: '70vh', background: '#f5f7fa', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
-        <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.10)', padding: '44px 40px', width: '100%', maxWidth: 460 }}>
-          <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <img src="/assets/images/logo.png" alt="ApseShopping" style={{ height: 52, marginBottom: 12 }} onError={e => e.target.style.display = 'none'} />
-            <h2 style={{ fontSize: 22, fontWeight: 800, color: '#1a1a2e', marginBottom: 4 }}>Create an Account</h2>
-            <p style={{ fontSize: 13, color: '#888' }}>Join ApseShopping today</p>
+        <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.10)', width: '100%', maxWidth: 460, overflow: 'hidden' }}>
+          {/* Niche or default header */}
+          <div style={{ background: niCfg ? niCfg.bg : 'linear-gradient(135deg,#1a1a2e,#0f3460)', padding: '28px 32px', textAlign: 'center' }}>
+            <div style={{ fontSize: 44, marginBottom: 8 }}>{niCfg ? niCfg.icon : '🛍️'}</div>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: '#fff', marginBottom: 4 }}>
+              {niCfg ? `Register for ${niCfg.name}` : 'Create an ApseShopping Account'}
+            </h2>
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
+              {niCfg ? `You'll get ${niCfg.name} access` : 'Full access to all 25 platforms & services'}
+            </p>
           </div>
+          <div style={{ padding: '28px 32px' }}>
+          {niCfg ? (
+            <div style={{ background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: 6, padding: '10px 14px', marginBottom: 20, fontSize: 12, color: '#78350f' }}>
+              🔒 Registering here gives you <strong>{niCfg.name}</strong> access only.
+              For full ApseShopping access, <Link to="/register" style={{ color: '#2e6dce', fontWeight: 700 }}>register at apseshopping.com</Link>
+            </div>
+          ) : (
+            <div style={{ background: '#f0f4ff', border: '1px solid #bfdbfe', borderRadius: 6, padding: '10px 14px', marginBottom: 20, fontSize: 12, color: '#1e40af' }}>
+              ✅ Registering here gives you <strong>full access</strong> to all 25 affiliate platforms.
+            </div>
+          )}
 
           {error && (
             <div style={{ background: '#fff5f5', border: '1px solid #feb2b2', borderRadius: 4, padding: '10px 14px', marginBottom: 18, fontSize: 13, color: '#c53030' }}>
@@ -84,7 +114,8 @@ export default function RegisterPage() {
 
           <div style={{ textAlign: 'center', marginTop: 22, fontSize: 13, color: '#666' }}>
             Already have an account?{' '}
-            <Link to="/login" style={{ color: '#2e6dce', fontWeight: 700, textDecoration: 'none' }}>Login here</Link>
+            <Link to={`/login${nicheKey ? `?niche=${nicheKey}` : ''}`} style={{ color: '#2e6dce', fontWeight: 700, textDecoration: 'none' }}>Login here</Link>
+          </div>
           </div>
         </div>
       </div>

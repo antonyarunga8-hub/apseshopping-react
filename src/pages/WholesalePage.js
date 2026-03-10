@@ -48,7 +48,7 @@ export default function WholesalePage() {
         </div>
       </div>
       <div style={{ padding: '50px 20px' }}>
-        <h2 className="section-title">Wholesale Categories</h2>
+        <h2 style={{ fontWeight: 800, fontSize: 26, marginBottom: 0 }}>Wholesale Categories</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16, marginTop: 28 }}>
           {wholesaleCategories.map(c => (
             <div key={c.name} style={{ border: '1px solid #e5e5e5', borderRadius: 8, padding: '20px 16px', background: '#fff', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -110,7 +110,7 @@ export default function WholesalePage() {
               <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, fontSize: 13 }}>Additional Requirements</label>
               <textarea name="message" value={form.message} onChange={handleChange} rows={4} placeholder="Describe your requirements..." style={{ width: '100%', padding: '10px 14px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, resize: 'vertical' }} />
             </div>
-            <button type="submit" className="btn-cart" style={{ padding: '13px', fontSize: 15 }}>Submit Wholesale Inquiry</button>
+            <button type="submit" style={{ padding: '13px', fontSize: 15, background: '#2e6dce', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 700, cursor: 'pointer', width: '100%' }}>Submit Wholesale Inquiry</button>
           </form>
         )}
       </div>

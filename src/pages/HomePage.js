@@ -90,9 +90,9 @@ function HeroSlider() {
         <i className="fas fa-chevron-right" />
       </button>
 
-      {/* Dots */}
+      {/* Dots — only for non-errored banners */}
       <div style={{ position:'absolute',bottom:14,left:'50%',transform:'translateX(-50%)',display:'flex',gap:8,zIndex:10 }}>
-        {banners.filter((_,i)=>!errors[i]).map((_, i) => (
+        {banners.map((_, i) => errors[i] ? null : (
           <button key={i} onClick={() => setCur(i)}
             style={{ width:12,height:12,borderRadius:'50%',border:'2px solid rgba(255,255,255,0.8)',padding:0,background: i===cur ? '#2e6dce':'rgba(255,255,255,0.4)',cursor:'pointer',transition:'all 0.2s' }} />
         ))}
@@ -208,11 +208,11 @@ export default function HomePage() {
             btn:'SHOP NOW', dark:false },
           { img:'/assets/images/demoes/demo4/banners/banner-2.jpg', to:'/wholesale',
             title:'Deal Promos',
-            sub: <div style={{fontSize:15,color:'#333',fontWeight:500,lineHeight:1.4}}>Starting at $99</div>,
+            sub: <div style={{fontSize:15,color:'#333',fontWeight:500,lineHeight:1.4}}>Starting at ₹999</div>,
             btn:'SHOP NOW', dark:false },
           { img:'/assets/images/demoes/demo4/banners/banner-3.jpg', to:'/retail',
             title:'Handbags',
-            sub: <div style={{fontSize:15,color:'#e53e3e',fontWeight:700,lineHeight:1.4}}>Starting at $99</div>,
+            sub: <div style={{fontSize:15,color:'#e53e3e',fontWeight:700,lineHeight:1.4}}>Starting at ₹999</div>,
             btn:'SHOP NOW', dark:false },
         ].map((b,i) => (
           <Link key={i} to={b.to} style={{ display:'block',borderRadius:3,overflow:'hidden',lineHeight:0,position:'relative',boxShadow:'0 1px 4px rgba(0,0,0,0.1)' }}
@@ -272,8 +272,8 @@ export default function HomePage() {
           <div style={{ position:'absolute',top:-1,left:0,right:0,background:'#1a1a1a',color:'#fff',fontSize:11,fontWeight:800,padding:'4px 0',letterSpacing:1,textAlign:'center' }}>Exclusive COUPON</div>
           <div style={{ marginTop:18,fontSize:11,color:'#888',fontWeight:600,letterSpacing:1 }}>UP TO</div>
           <div style={{ display:'flex',alignItems:'flex-start',justifyContent:'center',lineHeight:1 }}>
-            <span style={{ fontSize:18,fontWeight:800,color:'#e53e3e',marginTop:4 }}>$</span>
-            <span style={{ fontSize:52,fontWeight:900,color:'#e53e3e',lineHeight:1 }}>100</span>
+            <span style={{ fontSize:18,fontWeight:800,color:'#e53e3e',marginTop:4 }}>₹</span>
+            <span style={{ fontSize:52,fontWeight:900,color:'#e53e3e',lineHeight:1 }}>500</span>
           </div>
           <div style={{ fontSize:14,fontWeight:700,color:'#333',letterSpacing:2 }}>OFF</div>
         </div>

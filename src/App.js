@@ -12,6 +12,9 @@ import CheckoutPage from './pages/CheckoutPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import MyOrdersPage from './pages/MyOrdersPage';
+import ProductDetailPage from './pages/ProductDetailPage';
+import CategoryPage from './pages/CategoryPage';
+import { PolicyPage, AboutPage } from './pages/PolicyPages';
 import './App.css';
 
 function App() {
@@ -30,6 +33,10 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/my-orders" element={<MyOrdersPage />} />
+        <Route path="/product-info/:id" element={<ProductDetailPage />} />
+        <Route path="/category/:slug" element={<CategoryPage />} />
+        <Route path="/policies/:slug" element={<PolicyPage />} />
+        <Route path="/about-us" element={<AboutPage />} />
       </Routes>
     </Router>
   );

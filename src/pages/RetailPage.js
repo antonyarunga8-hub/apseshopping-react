@@ -4,16 +4,16 @@ import Layout from '../components/Layout';
 import { useCart } from '../context/CartContext';
 
 const retailProducts = [
-  { id: 'P66C4CDF72B546', name: 'Canon R100 Mirrorless Camera RF-S 18-45mm F/4.5-6.3 IS STM', img: '/product_img/P66C4CDF72B546/PIMG-066c4cdf72bfbe.png', oldPrice: 10000, newPrice: 8000, rating: 4, emoji: null },
-  { id: 'P66C4D9FBB8CB0', name: 'SONY Alpha ILCE-6600M APS-C Mirrorless Camera With 18-135 Mm Zoom', img: '/product_img/P66C4D9FBB8CB0/PIMG-066c4d9fbb97ae.jpg', oldPrice: 15000, newPrice: 13000, rating: 5, emoji: null },
-  { id: 'DEMO001', name: 'Android Smartphone 128GB — Dual SIM Fast Charging', img: null, emoji: '📱', oldPrice: 18000, newPrice: 14999, rating: 4 },
-  { id: 'DEMO002', name: 'Bluetooth Earphones — Active Noise Cancelling Pro', img: null, emoji: '🎧', oldPrice: 3500, newPrice: 2499, rating: 4 },
-  { id: 'DEMO003', name: 'Power Bank 20000mAh — 65W Fast Charge PD', img: null, emoji: '🔋', oldPrice: 2000, newPrice: 1299, rating: 4 },
-  { id: 'DEMO004', name: 'Smart Watch Fitness Tracker — Heart Rate & GPS', img: null, emoji: '⌚', oldPrice: 5000, newPrice: 3799, rating: 3 },
-  { id: 'DEMO005', name: 'Mixer Grinder 750W — 3 Stainless Steel Jars', img: null, emoji: '🍳', oldPrice: 3200, newPrice: 2199, rating: 4 },
-  { id: 'DEMO006', name: 'Tripod Stand Professional — 62" Aluminium', img: null, emoji: '📷', oldPrice: 1800, newPrice: 999, rating: 4 },
-  { id: 'DEMO007', name: 'USB-C Fast Charging Cable 3m — Braided', img: null, emoji: '🔌', oldPrice: 599, newPrice: 349, rating: 5 },
-  { id: 'DEMO008', name: 'Memory Card 128GB Class 10 UHS-I', img: null, emoji: '💾', oldPrice: 1200, newPrice: 699, rating: 4 },
+  { id: 'P66C4CDF72B546', name: 'Canon R100 Mirrorless Camera RF-S 18-45mm F/4.5-6.3 IS STM', img: '/product_img/P66C4CDF72B546/PIMG-066c4cdf72bfbe.png', oldPrice: 10000, newPrice: 8000, rating: 4, emoji: null, cats: ['Electronics', 'Cameras'] },
+  { id: 'P66C4D9FBB8CB0', name: 'SONY Alpha ILCE-6600M APS-C Mirrorless Camera With 18-135 Mm Zoom', img: '/product_img/P66C4D9FBB8CB0/PIMG-066c4d9fbb97ae.jpg', oldPrice: 15000, newPrice: 13000, rating: 5, emoji: null, cats: ['Electronics', 'Cameras'] },
+  { id: 'DEMO001', name: 'Android Smartphone 128GB — Dual SIM Fast Charging', img: null, emoji: '📱', oldPrice: 18000, newPrice: 14999, rating: 4, cats: ['Electronics', 'Mobiles'] },
+  { id: 'DEMO002', name: 'Bluetooth Earphones — Active Noise Cancelling Pro', img: null, emoji: '🎧', oldPrice: 3500, newPrice: 2499, rating: 4, cats: ['Electronics', 'Accessories'] },
+  { id: 'DEMO003', name: 'Power Bank 20000mAh — 65W Fast Charge PD', img: null, emoji: '🔋', oldPrice: 2000, newPrice: 1299, rating: 4, cats: ['Electronics', 'Accessories'] },
+  { id: 'DEMO004', name: 'Smart Watch Fitness Tracker — Heart Rate & GPS', img: null, emoji: '⌚', oldPrice: 5000, newPrice: 3799, rating: 3, cats: ['Electronics', 'Accessories'] },
+  { id: 'DEMO005', name: 'Mixer Grinder 750W — 3 Stainless Steel Jars', img: null, emoji: '🍳', oldPrice: 3200, newPrice: 2199, rating: 4, cats: ['Home Appliances'] },
+  { id: 'DEMO006', name: 'Tripod Stand Professional — 62" Aluminium', img: null, emoji: '📷', oldPrice: 1800, newPrice: 999, rating: 4, cats: ['Electronics', 'Cameras', 'Accessories'] },
+  { id: 'DEMO007', name: 'USB-C Fast Charging Cable 3m — Braided', img: null, emoji: '🔌', oldPrice: 599, newPrice: 349, rating: 5, cats: ['Electronics', 'Accessories'] },
+  { id: 'DEMO008', name: 'Memory Card 128GB Class 10 UHS-I', img: null, emoji: '💾', oldPrice: 1200, newPrice: 699, rating: 4, cats: ['Electronics', 'Accessories'] },
 ];
 const cats = ['All', 'Electronics', 'Cameras', 'Mobiles', 'Accessories', 'Home Appliances'];
 
@@ -59,7 +59,9 @@ export default function RetailPage() {
   const [activeCat, setActiveCat] = useState('All');
   const [sort, setSort] = useState('default');
   const [search, setSearch] = useState('');
-  let filtered = retailProducts.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
+  let filtered = retailProducts
+    .filter(p => activeCat === 'All' || p.cats?.includes(activeCat))
+    .filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
   if (sort === 'low') filtered = [...filtered].sort((a, b) => a.newPrice - b.newPrice);
   if (sort === 'high') filtered = [...filtered].sort((a, b) => b.newPrice - a.newPrice);
   return (

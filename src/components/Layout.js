@@ -134,9 +134,9 @@ export default function Layout({ children }) {
             </>
           )}
           <div style={{ display:'flex',gap:10,marginLeft:4 }}>
-            <a href="#" style={{ color:'#fff',fontSize:13 }}><i className="fab fa-facebook-f" /></a>
-            <a href="#" style={{ color:'#fff',fontSize:13 }}><i className="fab fa-twitter" /></a>
-            <a href="#" style={{ color:'#fff',fontSize:13 }}><i className="fab fa-instagram" /></a>
+            <a href="https://facebook.com/apseshopping" target="_blank" rel="noreferrer" style={{ color:'#fff',fontSize:13 }}><i className="fab fa-facebook-f" /></a>
+            <a href="https://twitter.com/apseshopping" target="_blank" rel="noreferrer" style={{ color:'#fff',fontSize:13 }}><i className="fab fa-twitter" /></a>
+            <a href="https://instagram.com/apseshopping" target="_blank" rel="noreferrer" style={{ color:'#fff',fontSize:13 }}><i className="fab fa-instagram" /></a>
           </div>
         </div>
       </div>
@@ -278,8 +278,12 @@ export default function Layout({ children }) {
             </div>
             {/* Social icons */}
             <div style={{ display:'flex',gap:10,marginTop:20 }}>
-              {[['fab fa-facebook-f','#3b5998'],['fab fa-twitter','#1da1f2'],['fab fa-instagram','#e4405f']].map(([icon,color]) => (
-                <a key={icon} href="#" style={{ width:36,height:36,borderRadius:'50%',border:'1px solid #444',display:'flex',alignItems:'center',justifyContent:'center',color:'#ccc',fontSize:14,transition:'all 0.2s',textDecoration:'none' }}
+              {[
+                ['fab fa-facebook-f','#3b5998','https://facebook.com/apseshopping'],
+                ['fab fa-twitter','#1da1f2','https://twitter.com/apseshopping'],
+                ['fab fa-instagram','#e4405f','https://instagram.com/apseshopping'],
+              ].map(([icon,color,url]) => (
+                <a key={icon} href={url} target="_blank" rel="noreferrer" style={{ width:36,height:36,borderRadius:'50%',border:'1px solid #444',display:'flex',alignItems:'center',justifyContent:'center',color:'#ccc',fontSize:14,transition:'all 0.2s',textDecoration:'none' }}
                   onMouseEnter={e => { e.currentTarget.style.background=color; e.currentTarget.style.borderColor=color; e.currentTarget.style.color='#fff'; }}
                   onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.borderColor='#444'; e.currentTarget.style.color='#ccc'; }}>
                   <i className={icon} />
@@ -292,13 +296,22 @@ export default function Layout({ children }) {
           <div>
             <h4 style={{ color:'#fff',fontSize:13,fontWeight:700,textTransform:'uppercase',letterSpacing:'1px',marginBottom:20,paddingBottom:10,borderBottom:'2px solid #2e6dce',display:'inline-block' }}>Information</h4>
             <ul style={{ listStyle:'none',padding:0,margin:0,display:'flex',flexDirection:'column',gap:2 }}>
-              {['Disclaimer','Shipping Policy','Refund Policy','Trademark And Copyright Infringement Of Item/Product','Shopping Online For Festival','Privacy Policy And Cookies','Terms And Condition','Sitemap'].map(item => (
+              {[
+                ['Disclaimer','/policies/disclaimer'],
+                ['Shipping Policy','/policies/shipping'],
+                ['Refund Policy','/policies/refund'],
+                ['Trademark & Copyright','/policies/copyright'],
+                ['Shopping Online For Festival','/retail'],
+                ['Privacy Policy & Cookies','/policies/privacy'],
+                ['Terms & Conditions','/policies/terms'],
+                ['Sitemap','/sitemap'],
+              ].map(([item, to]) => (
                 <li key={item}>
-                  <a href="#" style={{ color:'#aaa',fontSize:12,lineHeight:2,textDecoration:'none',display:'flex',alignItems:'center',gap:6 }}
+                  <Link to={to} style={{ color:'#aaa',fontSize:12,lineHeight:2,textDecoration:'none',display:'flex',alignItems:'center',gap:6 }}
                     onMouseEnter={e => e.currentTarget.style.color='#2e6dce'}
                     onMouseLeave={e => e.currentTarget.style.color='#aaa'}>
                     <i className="fas fa-link" style={{ fontSize:10 }} />{item}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -308,7 +321,7 @@ export default function Layout({ children }) {
           <div>
             <h4 style={{ color:'#fff',fontSize:13,fontWeight:700,textTransform:'uppercase',letterSpacing:'1px',marginBottom:20,paddingBottom:10,borderBottom:'2px solid #2e6dce',display:'inline-block' }}>Customer Service</h4>
             <ul style={{ listStyle:'none',padding:0,margin:0,display:'flex',flexDirection:'column',gap:2 }}>
-              {[['About Us','/contact-us'],['Contact Us','/contact-us'],['Customer Login','/login'],['Customer Register','/register'],['Vendor Login','/request-quote'],['Vendor Register','/request-quote'],['Seller Login','/request-quote'],['Seller Register','/request-quote'],['Services & Pre-Owned','/services'],['Import & Export','/import-export']].map(([label,to]) => (
+              {[['About Us','/about-us'],['Contact Us','/contact-us'],['Customer Login','/login'],['Customer Register','/register'],['Vendor Login','/request-quote'],['Vendor Register','/request-quote'],['Seller Login','/request-quote'],['Seller Register','/request-quote'],['Services & Pre-Owned','/services'],['Import & Export','/import-export']].map(([label,to]) => (
                 <li key={label}>
                   <Link to={to} style={{ color:'#aaa',fontSize:12,lineHeight:2,textDecoration:'none',display:'flex',alignItems:'center',gap:6 }}
                     onMouseEnter={e => e.currentTarget.style.color='#2e6dce'}
