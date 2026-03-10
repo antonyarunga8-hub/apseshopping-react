@@ -185,7 +185,7 @@ export default function MyOrdersPage() {
                   </div>
                 </div>
                 <div style={{ marginTop: 12 }}>
-                  <Link to="/request-quote">
+                  <Link to={`/rfq/${rfq.rfqId}`}>
                     <button style={{ background: '#f0f4fb', border: '1px solid #dce8fb', color: '#2e6dce', padding: '7px 16px', borderRadius: 6, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
                       View Discussion & Details →
                     </button>

@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
+import { useToast } from '../context/ToastContext';
+import { ALL_PRODUCTS, FEATURED_IDS, NEW_ARRIVAL_IDS } from '../data-products';
+import Stars from '../components/Stars';
 
 const banners = [
   '/admin/images/banner-1720956851.jpg',
@@ -10,11 +14,6 @@ const banners = [
   '/admin/images/banner-1736268069.jpg',
   '/admin/images/banner-1736268401.jpg',
   '/admin/images/banner-1736268651.jpg',
-];
-
-const products = [
-  { id: 'P66C4CDF72B546', name: 'Canon R100 Mirrorless Camera RF-S 18-45mm F/4.5-6.3 IS STM', img: '/product_img/P66C4CDF72B546/PIMG-066c4cdf72bfbe.png', oldPrice: 10000, newPrice: 8000, rating: 4, category: 'digital-camera' },
-  { id: 'P66C4D9FBB8CB0', name: 'SONY Alpha ILCE-6600M APS-C Mirrorless Camera With 18-135 Mm Zoom', img: '/product_img/P66C4D9FBB8CB0/PIMG-066c4d9fbb97ae.jpg', oldPrice: 15000, newPrice: 13000, rating: 4, category: 'digital-camera' },
 ];
 
 const topCategories = [
@@ -30,27 +29,17 @@ const topCategories = [
   { name: 'Stationery', slug: 'stationery', emoji: '📝' },
 ];
 
-function Stars({ n }) {
-  return (
-    <div style={{ display:'flex',gap:1,margin:'4px 0' }}>
-      {[1,2,3,4,5].map(i => (
-        <i key={i} className={i <= n ? 'fas fa-star' : 'far fa-star'} style={{ fontSize:11,color: i <= n ? '#f59e0b' : '#ddd' }} />
-      ))}
-    </div>
-  );
-}
+const featuredProducts = ALL_PRODUCTS.filter(p => FEATURED_IDS.includes(p.id));
+const newArrivals = ALL_PRODUCTS.filter(p => NEW_ARRIVAL_IDS.includes(p.id));
 
 function HeroSlider() {
   const [cur, setCur] = useState(0);
-  const [loaded, setLoaded] = useState({});
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     const t = setInterval(() => setCur(c => (c + 1) % banners.length), 4500);
     return () => clearInterval(t);
   }, []);
-
-  const validCount = banners.filter((_, i) => !errors[i]).length;
 
   return (
     <div style={{ position:'relative', background:'#f0f4f8', lineHeight:0, overflow:'hidden' }}>
@@ -60,7 +49,6 @@ function HeroSlider() {
             <img
               src={src}
               alt={`Banner ${i+1}`}
-              onLoad={() => setLoaded(l => ({ ...l, [i]: true }))}
               onError={() => setErrors(e => ({ ...e, [i]: true }))}
               style={{ width:'100%', height:380, objectFit:'cover', display:'block' }}
             />
@@ -75,26 +63,18 @@ function HeroSlider() {
           )}
         </div>
       ))}
-
-      {/* Arrows */}
       <button onClick={() => setCur(c => (c-1+banners.length)%banners.length)}
-        style={{ position:'absolute',left:16,top:'50%',transform:'translateY(-50%)',background:'rgba(0,0,0,0.35)',color:'#fff',border:'none',width:40,height:40,borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,zIndex:10,transition:'background 0.2s' }}
-        onMouseEnter={e=>e.currentTarget.style.background='rgba(0,0,0,0.65)'}
-        onMouseLeave={e=>e.currentTarget.style.background='rgba(0,0,0,0.35)'}>
+        style={{ position:'absolute',left:16,top:'50%',transform:'translateY(-50%)',background:'rgba(0,0,0,0.35)',color:'#fff',border:'none',width:40,height:40,borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,zIndex:10 }}>
         <i className="fas fa-chevron-left" />
       </button>
       <button onClick={() => setCur(c => (c+1)%banners.length)}
-        style={{ position:'absolute',right:16,top:'50%',transform:'translateY(-50%)',background:'rgba(0,0,0,0.35)',color:'#fff',border:'none',width:40,height:40,borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,zIndex:10,transition:'background 0.2s' }}
-        onMouseEnter={e=>e.currentTarget.style.background='rgba(0,0,0,0.65)'}
-        onMouseLeave={e=>e.currentTarget.style.background='rgba(0,0,0,0.35)'}>
+        style={{ position:'absolute',right:16,top:'50%',transform:'translateY(-50%)',background:'rgba(0,0,0,0.35)',color:'#fff',border:'none',width:40,height:40,borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,zIndex:10 }}>
         <i className="fas fa-chevron-right" />
       </button>
-
-      {/* Dots — only for non-errored banners */}
       <div style={{ position:'absolute',bottom:14,left:'50%',transform:'translateX(-50%)',display:'flex',gap:8,zIndex:10 }}>
         {banners.map((_, i) => errors[i] ? null : (
           <button key={i} onClick={() => setCur(i)}
-            style={{ width:12,height:12,borderRadius:'50%',border:'2px solid rgba(255,255,255,0.8)',padding:0,background: i===cur ? '#2e6dce':'rgba(255,255,255,0.4)',cursor:'pointer',transition:'all 0.2s' }} />
+            style={{ width:12,height:12,borderRadius:'50%',border:'2px solid rgba(255,255,255,0.8)',padding:0,background: i===cur ? '#2e6dce':'rgba(255,255,255,0.4)',cursor:'pointer' }} />
         ))}
       </div>
     </div>
@@ -104,32 +84,42 @@ function HeroSlider() {
 function ProductCard({ product }) {
   const [added, setAdded] = useState(false);
   const { addToCart } = useCart();
+  const { toggleWishlist, isWishlisted } = useWishlist();
+  const { success } = useToast();
+  const pct = Math.round(((product.oldPrice - product.newPrice) / product.oldPrice) * 100);
+  const wishlisted = isWishlisted(product.id);
   return (
     <div style={{ border:'1px solid #e8e8e8',borderRadius:3,background:'#fff',overflow:'hidden',transition:'box-shadow 0.2s,transform 0.2s',position:'relative' }}
       onMouseEnter={e=>{ e.currentTarget.style.boxShadow='0 4px 20px rgba(0,0,0,0.12)'; e.currentTarget.style.transform='translateY(-3px)'; }}
       onMouseLeave={e=>{ e.currentTarget.style.boxShadow=''; e.currentTarget.style.transform=''; }}>
+      <button onClick={() => { const r = toggleWishlist(product); success(r ? '❤️ Added to wishlist' : '💔 Removed from wishlist'); }}
+        style={{ position:'absolute',top:10,right:10,zIndex:3,background:'#fff',border:'1px solid #eee',borderRadius:'50%',width:30,height:30,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:15,boxShadow:'0 1px 4px rgba(0,0,0,0.1)' }}>
+        {wishlisted ? '❤️' : '🤍'}
+      </button>
       <Link to={`/product-info/${product.id}`} style={{ textDecoration:'none',color:'inherit' }}>
-        {/* Discount badge */}
         <div style={{ position:'absolute',top:10,left:10,zIndex:2 }}>
           <span style={{ background:'#e53e3e',color:'#fff',fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:2,display:'block' }}>
-            {Math.round(((product.oldPrice - product.newPrice) / product.oldPrice) * 100)}% OFF
+            {pct}% OFF
           </span>
         </div>
         <div style={{ background:'#f9f9f9',height:200,display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden' }}>
-          <img src={product.img} alt={product.name} style={{ maxHeight:185,maxWidth:'90%',objectFit:'contain' }} />
+          {product.img
+            ? <img src={product.img} alt={product.name} style={{ maxHeight:185,maxWidth:'90%',objectFit:'contain' }} />
+            : <span style={{ fontSize:64 }}>{product.emoji || '🛍️'}</span>}
         </div>
         <div style={{ padding:'14px 14px 4px' }}>
           <h3 style={{ fontSize:13,fontWeight:600,color:'#333',marginBottom:6,lineHeight:1.5 }}>{product.name}</h3>
-          <div style={{ display:'flex',gap:8,alignItems:'center',flexWrap:'wrap' }}>
-            <span style={{ color:'#999',textDecoration:'line-through',fontSize:12 }}>{product.oldPrice.toLocaleString()}</span>
+          <Stars n={product.rating} size={11} />
+          <div style={{ display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginTop:4 }}>
+            <span style={{ color:'#999',textDecoration:'line-through',fontSize:12 }}>₹{product.oldPrice.toLocaleString()}</span>
             <span style={{ color:'#2e6dce',fontWeight:700,fontSize:17 }}>₹{product.newPrice.toLocaleString()}</span>
           </div>
         </div>
       </Link>
       <div style={{ padding:'8px 14px 14px' }}>
         <button
-          onClick={() => { addToCart(product); setAdded(true); setTimeout(()=>setAdded(false),2000); }}
-          style={{ width:'100%',background: added ? '#22c55e':'#333',color:'#fff',border:'none',padding:'9px',borderRadius:3,fontSize:13,fontWeight:600,cursor:'pointer',transition:'background 0.2s',letterSpacing:'0.3px' }}>
+          onClick={() => { addToCart(product); setAdded(true); success('🛒 Added to cart!'); setTimeout(()=>setAdded(false),2000); }}
+          style={{ width:'100%',background: added ? '#22c55e':'#333',color:'#fff',border:'none',padding:'9px',borderRadius:3,fontSize:13,fontWeight:600,cursor:'pointer',transition:'background 0.2s' }}>
           {added ? '✓ Added!' : 'Add to Cart'}
         </button>
       </div>
@@ -145,7 +135,6 @@ function CategoriesCarousel() {
   const shown = topCategories.slice(idx, idx + visible);
   return (
     <div style={{ position:'relative', marginBottom:8 }}>
-      {/* Prev arrow */}
       {canPrev && (
         <button onClick={() => setIdx(i => i - 1)}
           style={{ position:'absolute',left:-20,top:'38%',transform:'translateY(-50%)',zIndex:10,background:'#fff',border:'1px solid #ddd',borderRadius:'50%',width:36,height:36,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',boxShadow:'0 2px 6px rgba(0,0,0,0.12)',fontSize:14,color:'#444' }}>
@@ -155,7 +144,7 @@ function CategoriesCarousel() {
       <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:16 }}>
         {shown.map(c => (
           <Link key={c.slug} to={`/category/${c.slug}`} style={{ textDecoration:'none',textAlign:'center' }}>
-            <div style={{ width:'100%',paddingBottom:'100%',position:'relative',borderRadius:'50%',background:'#f0f0f0',marginBottom:12,display:'flex',alignItems:'center',justifyContent:'center' }}>
+            <div style={{ width:'100%',paddingBottom:'100%',position:'relative',borderRadius:'50%',background:'#f0f0f0',marginBottom:12 }}>
               <div style={{ position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:52 }}>
                 {c.emoji}
               </div>
@@ -164,7 +153,6 @@ function CategoriesCarousel() {
           </Link>
         ))}
       </div>
-      {/* Next arrow */}
       {canNext && (
         <button onClick={() => setIdx(i => i + 1)}
           style={{ position:'absolute',right:-20,top:'38%',transform:'translateY(-50%)',zIndex:10,background:'#fff',border:'1px solid #ddd',borderRadius:'50%',width:36,height:36,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',boxShadow:'0 2px 6px rgba(0,0,0,0.12)',fontSize:14,color:'#444' }}>
@@ -202,25 +190,14 @@ export default function HomePage() {
       {/* Promo Banners */}
       <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr 1fr',padding:'20px',background:'#f5f5f5',gap:16 }}>
         {[
-          { img:'/assets/images/demoes/demo4/banners/banner-1.jpg', to:'/retail',
-            title:'Porto Watches',
-            sub: <div style={{lineHeight:1.3}}><s style={{fontSize:12,color:'rgba(0,0,0,0.5)',fontWeight:600}}>20%</s><span style={{fontSize:26,fontWeight:900,color:'#222'}}> 30%</span><span style={{fontSize:14,fontWeight:700,color:'#222'}}> OFF</span></div>,
-            btn:'SHOP NOW', dark:false },
-          { img:'/assets/images/demoes/demo4/banners/banner-2.jpg', to:'/wholesale',
-            title:'Deal Promos',
-            sub: <div style={{fontSize:15,color:'#333',fontWeight:500,lineHeight:1.4}}>Starting at ₹999</div>,
-            btn:'SHOP NOW', dark:false },
-          { img:'/assets/images/demoes/demo4/banners/banner-3.jpg', to:'/retail',
-            title:'Handbags',
-            sub: <div style={{fontSize:15,color:'#e53e3e',fontWeight:700,lineHeight:1.4}}>Starting at ₹999</div>,
-            btn:'SHOP NOW', dark:false },
+          { img:'/assets/images/demoes/demo4/banners/banner-1.jpg', to:'/retail', title:'Porto Watches', sub:<div style={{lineHeight:1.3}}><s style={{fontSize:12,color:'rgba(0,0,0,0.5)',fontWeight:600}}>20%</s><span style={{fontSize:26,fontWeight:900,color:'#222'}}> 30%</span><span style={{fontSize:14,fontWeight:700,color:'#222'}}> OFF</span></div>, btn:'SHOP NOW' },
+          { img:'/assets/images/demoes/demo4/banners/banner-2.jpg', to:'/wholesale', title:'Deal Promos', sub:<div style={{fontSize:15,color:'#333',fontWeight:500,lineHeight:1.4}}>Starting at ₹999</div>, btn:'SHOP NOW' },
+          { img:'/assets/images/demoes/demo4/banners/banner-3.jpg', to:'/retail', title:'Handbags', sub:<div style={{fontSize:15,color:'#e53e3e',fontWeight:700,lineHeight:1.4}}>Starting at ₹999</div>, btn:'SHOP NOW' },
         ].map((b,i) => (
           <Link key={i} to={b.to} style={{ display:'block',borderRadius:3,overflow:'hidden',lineHeight:0,position:'relative',boxShadow:'0 1px 4px rgba(0,0,0,0.1)' }}
-            onMouseEnter={e=>e.currentTarget.querySelector('img').style.transform='scale(1.04)'}
-            onMouseLeave={e=>e.currentTarget.querySelector('img').style.transform='scale(1)'}>
-            <img src={b.img} alt={`Promo ${i+1}`} style={{ width:'100%',display:'block',transition:'transform 0.4s',height:220,objectFit:'cover' }}
-              onError={e=>{ e.target.style.display='none'; }} />
-            {/* Text overlay — left aligned, matching live site */}
+            onMouseEnter={e=>e.currentTarget.querySelector('img')?.style && (e.currentTarget.querySelector('img').style.transform='scale(1.04)')}
+            onMouseLeave={e=>e.currentTarget.querySelector('img')?.style && (e.currentTarget.querySelector('img').style.transform='scale(1)')}>
+            <img src={b.img} alt={`Promo ${i+1}`} style={{ width:'100%',display:'block',transition:'transform 0.4s',height:220,objectFit:'cover' }} onError={e=>{ e.target.style.display='none'; }} />
             <div style={{ position:'absolute',inset:0,display:'flex',flexDirection:'column',justifyContent:'center',padding:'0 28px' }}>
               <h3 style={{ color:'#222',fontSize:22,fontWeight:800,marginBottom:4,lineHeight:1.2 }}>{b.title}</h3>
               <div style={{ marginBottom:16 }}>{b.sub}</div>
@@ -230,44 +207,33 @@ export default function HomePage() {
         ))}
       </div>
 
-      {/* Main layout: products full width */}
+      {/* Products */}
       <div style={{ padding:'28px 20px',maxWidth:1400,margin:'0 auto',boxSizing:'border-box' }}>
-        <div>
-          {/* Popular Products */}
-          <h2 style={{ fontSize:21,fontWeight:700,color:'#222',marginBottom:20,paddingBottom:8,borderBottom:'2px solid #e8e8e8',display:'flex',alignItems:'center',gap:10 }}>
-            <span style={{ borderLeft:'4px solid #2e6dce',paddingLeft:10 }}>POPULAR PRODUCTS</span>
-          </h2>
-          <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:18,marginBottom:36 }}>
-            {products.map(p => <ProductCard key={p.id} product={p} />)}
-          </div>
-
-          {/* New Arrivals */}
-          <h2 style={{ fontSize:21,fontWeight:700,color:'#222',marginBottom:20,paddingBottom:8,borderBottom:'2px solid #e8e8e8',display:'flex',alignItems:'center',gap:10 }}>
-            <span style={{ borderLeft:'4px solid #2e6dce',paddingLeft:10 }}>NEW ARRIVALS</span>
-          </h2>
-          <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:18,marginBottom:36 }}>
-            {[...products].reverse().map(p => <ProductCard key={p.id+'_new'} product={p} />)}
-          </div>
-
-          {/* Top 10 Categories — horizontal carousel */}
-          <h2 style={{ fontSize:18,fontWeight:700,color:'#222',marginBottom:24,paddingBottom:0 }}>TOP 10 CATEGORIES</h2>
-          <CategoriesCarousel />
+        <h2 style={{ fontSize:21,fontWeight:700,color:'#222',marginBottom:20,paddingBottom:8,borderBottom:'2px solid #e8e8e8',display:'flex',alignItems:'center',gap:10 }}>
+          <span style={{ borderLeft:'4px solid #2e6dce',paddingLeft:10 }}>POPULAR PRODUCTS</span>
+        </h2>
+        <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:18,marginBottom:36 }}>
+          {featuredProducts.map(p => <ProductCard key={p.id} product={p} />)}
         </div>
 
+        <h2 style={{ fontSize:21,fontWeight:700,color:'#222',marginBottom:20,paddingBottom:8,borderBottom:'2px solid #e8e8e8',display:'flex',alignItems:'center',gap:10 }}>
+          <span style={{ borderLeft:'4px solid #2e6dce',paddingLeft:10 }}>NEW ARRIVALS</span>
+        </h2>
+        <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:18,marginBottom:36 }}>
+          {newArrivals.map(p => <ProductCard key={p.id+'_new'} product={p} />)}
+        </div>
 
+        <h2 style={{ fontSize:18,fontWeight:700,color:'#222',marginBottom:24 }}>TOP 10 CATEGORIES</h2>
+        <CategoriesCarousel />
       </div>
 
       {/* Top Fashion Deals */}
       <div style={{ background:'#222',padding:'40px 20px',display:'flex',alignItems:'center',justifyContent:'center',gap:40,flexWrap:'wrap' }}>
-        {/* Text + button — centered */}
         <div style={{ textAlign:'center' }}>
           <div style={{ fontSize:36,fontWeight:900,color:'#fff',textTransform:'uppercase',letterSpacing:2,lineHeight:1.1 }}>TOP FASHION</div>
           <div style={{ fontSize:36,fontWeight:900,color:'#fff',textTransform:'uppercase',letterSpacing:2,lineHeight:1.1,marginBottom:20 }}>DEALS</div>
-          <Link to="/retail">
-            <button style={{ background:'#444',color:'#fff',border:'none',padding:'14px 36px',fontWeight:700,fontSize:13,cursor:'pointer',letterSpacing:1 }}>VIEW SALE</button>
-          </Link>
+          <Link to="/retail"><button style={{ background:'#444',color:'#fff',border:'none',padding:'14px 36px',fontWeight:700,fontSize:13,cursor:'pointer',letterSpacing:1 }}>VIEW SALE</button></Link>
         </div>
-        {/* Coupon box */}
         <div style={{ background:'#fff',padding:'20px 28px',position:'relative',minWidth:160,textAlign:'center' }}>
           <div style={{ position:'absolute',top:-1,left:0,right:0,background:'#1a1a1a',color:'#fff',fontSize:11,fontWeight:800,padding:'4px 0',letterSpacing:1,textAlign:'center' }}>Exclusive COUPON</div>
           <div style={{ marginTop:18,fontSize:11,color:'#888',fontWeight:600,letterSpacing:1 }}>UP TO</div>
@@ -279,28 +245,30 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Featured / Best Selling / Latest / Top Rated — 4 col grid below fashion banner */}
+      {/* 4-col product grid */}
       <div style={{ background:'#f9f9f9',padding:'36px 20px' }}>
         <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:24,maxWidth:1400,margin:'0 auto' }}>
           {[
-            ['FEATURED PRODUCTS', [...products].reverse()],
-            ['BEST SELLING PRODUCTS', products],
-            ['LATEST PRODUCTS', products],
-            ['TOP RATED PRODUCTS', [...products].reverse()],
+            ['FEATURED PRODUCTS', [...featuredProducts].reverse()],
+            ['BEST SELLING PRODUCTS', featuredProducts],
+            ['LATEST PRODUCTS', featuredProducts],
+            ['TOP RATED PRODUCTS', [...featuredProducts].reverse()],
           ].map(([title, prods]) => (
             <div key={title}>
               <h3 style={{ fontSize:13,fontWeight:700,color:'#222',textTransform:'uppercase',letterSpacing:'0.8px',marginBottom:18,paddingBottom:10,borderBottom:'2px solid #e8e8e8' }}>{title}</h3>
               {prods.map(p => (
                 <div key={p.id+title} style={{ display:'flex',gap:12,marginBottom:16,paddingBottom:16,borderBottom:'1px solid #f0f0f0',alignItems:'center' }}>
                   <Link to={`/product-info/${p.id}`} style={{ flexShrink:0 }}>
-                    <img src={p.img} alt={p.name} style={{ width:65,height:65,objectFit:'contain',background:'#fff',borderRadius:3,border:'1px solid #eee' }} />
+                    {p.img
+                      ? <img src={p.img} alt={p.name} style={{ width:65,height:65,objectFit:'contain',background:'#fff',borderRadius:3,border:'1px solid #eee' }} />
+                      : <div style={{ width:65,height:65,background:'#e8f0fe',borderRadius:3,display:'flex',alignItems:'center',justifyContent:'center',fontSize:28 }}>{p.emoji}</div>}
                   </Link>
                   <div>
                     <Link to={`/product-info/${p.id}`} style={{ textDecoration:'none',color:'#333',fontSize:12,display:'block',lineHeight:1.4,marginBottom:4,fontWeight:500 }}>
                       {p.name.length>42?p.name.substring(0,42)+'...':p.name}
                     </Link>
-                    <Stars n={p.rating} />
-                    <div style={{ fontSize:13,fontWeight:700,color:'#2e6dce',marginTop:2 }}>{p.newPrice.toLocaleString()}</div>
+                    <Stars n={p.rating} size={10} />
+                    <div style={{ fontSize:13,fontWeight:700,color:'#2e6dce',marginTop:2 }}>₹{p.newPrice.toLocaleString()}</div>
                   </div>
                 </div>
               ))}
@@ -309,7 +277,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Import & Export CTA — our custom addition */}
+      {/* Import & Export CTA */}
       <div style={{ background:'linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)',color:'#fff',padding:'60px 20px' }}>
         <div style={{ maxWidth:1100,margin:'0 auto' }}>
           <div style={{ textAlign:'center',marginBottom:48 }}>

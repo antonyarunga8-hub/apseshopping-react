@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useWishlist } from '../context/WishlistContext';
 
 const categories = [
   { name: 'Electronics', sub: ['Android Mobiles','Mobile Cables','Mobile Chargers','Power Banks','Earphones And Headphones','Tripod','Screen Guards','Memory Cards (SD Cards)','Mobile Cover','Mobile Car Charger','Mixer Grinders','Watches','Speakers','Digital Camera','Mouse'] },
   { name: 'Furnitures' }, { name: 'Imitation Jewellery' }, { name: "Women's Garments" },
   { name: "Men's Garments" }, { name: 'Kitchen Cookware' }, { name: 'Food Products' },
-  { name: 'Kitchen Cook Ware/Appliances' }, { name: 'Cleaning Products' }, { name: 'Stationery' },
+  { name: 'Cleaning Products' }, { name: 'Stationery' },
   { name: 'Mens Fashion' }, { name: 'Security Whistle' }, { name: 'Tableware' },
   { name: 'General Products' }, { name: 'Medical Surgical Accessories' }, { name: 'Water Bottle' },
   { name: 'Agriculture' }, { name: 'Foot Wear' }, { name: 'Helmet' },
@@ -42,12 +43,36 @@ const cities = [
 export default function Layout({ children }) {
   const [catOpen, setCatOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  const [cityModal, setCityModal] = useState(() => !localStorage.getItem('apse_city_dismissed'));
+  const [cityModal, setCityModal] = useState(() => { try { return !localStorage.getItem('apse_city_dismissed'); } catch { return false; } });
   const [selectedCity, setSelectedCity] = useState('Select City');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterStatus, setNewsletterStatus] = useState(''); // '' | 'success' | 'error'
   const { cartItems, removeFromCart, cartCount, cartTotal } = useCart();
   const { user, logout } = useAuth();
+  const { wishlistCount } = useWishlist();
   const location = useLocation();
+  const navigate = useNavigate();
   const isActive = (path) => location.pathname === path;
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    if (!q) return;
+    navigate(`/retail?q=${encodeURIComponent(q)}`);
+  };
+
+  const handleNewsletter = (e) => {
+    e.preventDefault();
+    if (!newsletterEmail.includes('@')) {
+      setNewsletterStatus('error');
+      return;
+    }
+    // TODO: wire to backend / email service
+    setNewsletterStatus('success');
+    setNewsletterEmail('');
+    setTimeout(() => setNewsletterStatus(''), 4000);
+  };
 
   return (
     <div style={{ fontFamily: "'Open Sans','Segoe UI',Tahoma,sans-serif", fontSize: 14, color: '#333' }}>
@@ -56,13 +81,13 @@ export default function Layout({ children }) {
       {cityModal && (
         <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.6)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center' }}>
           <div style={{ background:'#fff',borderRadius:4,padding:'28px 24px',width:460,maxWidth:'95vw',position:'relative',boxShadow:'0 10px 40px rgba(0,0,0,0.3)' }}>
-            <button onClick={() => { localStorage.setItem('apse_city_dismissed','1'); setCityModal(false); }} style={{ position:'absolute',top:10,right:14,background:'none',border:'none',fontSize:24,cursor:'pointer',color:'#555',lineHeight:1 }}>×</button>
+            <button onClick={() => { try { localStorage.setItem('apse_city_dismissed','1'); } catch {} setCityModal(false); }} style={{ position:'absolute',top:10,right:14,background:'none',border:'none',fontSize:24,cursor:'pointer',color:'#555',lineHeight:1 }}>×</button>
             <h3 style={{ fontSize:18,fontWeight:700,marginBottom:18,borderBottom:'1px solid #eee',paddingBottom:12 }}>Select City</h3>
             <select value={selectedCity} onChange={e => setSelectedCity(e.target.value)}
               style={{ width:'100%',padding:'9px 12px',border:'1px solid #ccc',borderRadius:3,fontSize:14,marginBottom:16,appearance:'auto' }}>
               {cities.map(c => <option key={c}>{c}</option>)}
             </select>
-            <button onClick={() => { localStorage.setItem('apse_city_dismissed','1'); setCityModal(false); }}
+            <button onClick={() => { try { localStorage.setItem('apse_city_dismissed','1'); } catch {} setCityModal(false); }}
               style={{ background:'#333',color:'#fff',border:'none',padding:'10px 32px',borderRadius:3,fontSize:14,fontWeight:700,cursor:'pointer' }}>
               SEARCH
             </button>
@@ -144,12 +169,7 @@ export default function Layout({ children }) {
       {/* Header */}
       <div style={{ background:'linear-gradient(180deg,#1a7ad4 0%,#1565c0 100%)',padding:'16px 24px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:20 }}>
         <Link to="/" style={{ display:'flex',alignItems:'center',textDecoration:'none',flexShrink:0 }}>
-          <img
-            src="/assets/images/logo.png"
-            alt="Apse Shopping"
-            style={{ height:70 }}
-            onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }}
-          />
+          <img src="/assets/images/logo.png" alt="Apse Shopping" style={{ height:70 }} onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }} />
           <div style={{ display:'none',alignItems:'center',gap:8 }}>
             <div style={{ background:'rgba(255,255,255,0.15)',borderRadius:8,padding:'6px 10px',border:'2px solid rgba(255,255,255,0.4)' }}>
               <div style={{ fontSize:28,fontWeight:900,color:'#fff',lineHeight:1 }}>Apse</div>
@@ -158,24 +178,37 @@ export default function Layout({ children }) {
           </div>
         </Link>
 
-        {/* Search */}
-        <div style={{ flex:1,maxWidth:700,display:'flex',background:'#fff',borderRadius:4,overflow:'hidden',boxShadow:'0 1px 4px rgba(0,0,0,0.2)' }}>
-          <input type="text" placeholder="Search..." style={{ flex:1,border:'none',padding:'13px 20px',fontSize:14,outline:'none' }} />
-          <button style={{ background:'#2e6dce',color:'#fff',border:'none',padding:'13px 22px',cursor:'pointer',fontSize:16 }}>
+        {/* ── Search bar — now functional ── */}
+        <form onSubmit={handleSearch} style={{ flex:1,maxWidth:700,display:'flex',background:'#fff',borderRadius:4,overflow:'hidden',boxShadow:'0 1px 4px rgba(0,0,0,0.2)' }}>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search products..."
+            style={{ flex:1,border:'none',padding:'13px 20px',fontSize:14,outline:'none' }}
+          />
+          <button type="submit" style={{ background:'#2e6dce',color:'#fff',border:'none',padding:'13px 22px',cursor:'pointer',fontSize:16 }}>
             <i className="fas fa-search" />
           </button>
-        </div>
+        </form>
 
-        {/* Cart */}
-        <div style={{ position:'relative',cursor:'pointer',color:'#fff',fontSize:28 }} onClick={() => setCartOpen(true)}>
-          <i className="fas fa-shopping-cart" />
-          <span style={{ position:'absolute',top:-8,right:-10,background:'#e53e3e',color:'#fff',borderRadius:'50%',width:20,height:20,fontSize:10,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,border:'2px solid #1565c0' }}>{cartCount}</span>
+        {/* Wishlist + Cart */}
+        <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+          <Link to="/wishlist" style={{ position:'relative', color:'#fff', fontSize:26, textDecoration:'none' }}>
+            <i className="fas fa-heart" />
+            {wishlistCount > 0 && (
+              <span style={{ position:'absolute',top:-8,right:-10,background:'#ec4899',color:'#fff',borderRadius:'50%',width:20,height:20,fontSize:10,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,border:'2px solid #1565c0' }}>{wishlistCount}</span>
+            )}
+          </Link>
+          <div style={{ position:'relative',cursor:'pointer',color:'#fff',fontSize:28 }} onClick={() => setCartOpen(true)}>
+            <i className="fas fa-shopping-cart" />
+            <span style={{ position:'absolute',top:-8,right:-10,background:'#e53e3e',color:'#fff',borderRadius:'50%',width:20,height:20,fontSize:10,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,border:'2px solid #1565c0' }}>{cartCount}</span>
+          </div>
         </div>
       </div>
 
       {/* Navbar */}
       <nav style={{ background:'#222',display:'flex',alignItems:'stretch',position:'sticky',top:0,zIndex:500,boxShadow:'0 2px 4px rgba(0,0,0,0.3)' }}>
-        {/* All Categories */}
         <div style={{ position:'relative' }}>
           <button
             onClick={() => setCatOpen(v => !v)}
@@ -189,7 +222,7 @@ export default function Layout({ children }) {
                   <Link
                     to={`/category/${c.name.toLowerCase().replace(/[\s/]+/g,'-').replace(/[^a-z0-9-]/g,'')}`}
                     onClick={() => setCatOpen(false)}
-                    style={{ color:'#444',padding:'9px 18px',borderBottom:'1px solid #f5f5f5',fontSize:13,display:'block',textDecoration:'none',transition:'all 0.15s' }}
+                    style={{ color:'#444',padding:'9px 18px',borderBottom:'1px solid #f5f5f5',fontSize:13,display:'block',textDecoration:'none' }}
                     onMouseEnter={e => { e.currentTarget.style.background='#f0f4fb'; e.currentTarget.style.color='#2e6dce'; e.currentTarget.style.paddingLeft='24px'; }}
                     onMouseLeave={e => { e.currentTarget.style.background=''; e.currentTarget.style.color='#444'; e.currentTarget.style.paddingLeft='18px'; }}>
                     {c.name}
@@ -200,7 +233,6 @@ export default function Layout({ children }) {
           )}
         </div>
 
-        {/* Nav Links */}
         {[
           { to:'/', label:'HOME' },
           { to:'/retail', label:'RETAIL' },
@@ -209,29 +241,16 @@ export default function Layout({ children }) {
           { to:'/services', label:'SERVICES & PRE OWNED' },
           { to:'/import-export', label:'IMPORT & EXPORT', special:true },
           { to:'/contact-us', label:'CONTACT US' },
+          { to:'/admin', label:'⚙️ ADMIN', special:false },
         ].map(item => (
           <Link key={item.to} to={item.to}
-            style={{
-              color: '#fff',
-              padding:'14px 14px',
-              fontSize:12,
-              fontWeight:600,
-              letterSpacing:'0.3px',
-              display:'flex',
-              alignItems:'center',
-              textDecoration:'none',
-              whiteSpace:'nowrap',
-              background: isActive(item.to) ? '#2e6dce' : item.special ? '#7c3aed' : 'transparent',
-              borderBottom: isActive(item.to) ? '3px solid #60a5fa' : '3px solid transparent',
-              transition:'all 0.2s',
-            }}
-            onMouseEnter={e => { if(!isActive(item.to)) { e.currentTarget.style.background = item.special ? '#5b21b6' : 'rgba(255,255,255,0.08)'; } }}
-            onMouseLeave={e => { if(!isActive(item.to)) { e.currentTarget.style.background = item.special ? '#7c3aed' : 'transparent'; } }}>
+            style={{ color:'#fff',padding:'14px 14px',fontSize:12,fontWeight:600,letterSpacing:'0.3px',display:'flex',alignItems:'center',textDecoration:'none',whiteSpace:'nowrap',background: isActive(item.to) ? '#2e6dce' : item.special ? '#7c3aed' : 'transparent',borderBottom: isActive(item.to) ? '3px solid #60a5fa' : '3px solid transparent',transition:'all 0.2s' }}
+            onMouseEnter={e => { if(!isActive(item.to)) e.currentTarget.style.background = item.special ? '#5b21b6' : 'rgba(255,255,255,0.08)'; }}
+            onMouseLeave={e => { if(!isActive(item.to)) e.currentTarget.style.background = item.special ? '#7c3aed' : 'transparent'; }}>
             {item.label}
           </Link>
         ))}
 
-        {/* Logo in navbar */}
         <Link to="/" style={{ display:'flex',alignItems:'center',padding:'6px 16px',marginLeft:'auto',borderLeft:'1px solid #444' }}>
           <img src="/assets/images/logo.png" alt="Apse" style={{ height:28,filter:'brightness(10)' }} onError={e => { e.target.style.display='none'; }} />
         </Link>
@@ -276,14 +295,9 @@ export default function Layout({ children }) {
                 </div>
               </div>
             </div>
-            {/* Social icons */}
             <div style={{ display:'flex',gap:10,marginTop:20 }}>
-              {[
-                ['fab fa-facebook-f','#3b5998','https://facebook.com/apseshopping'],
-                ['fab fa-twitter','#1da1f2','https://twitter.com/apseshopping'],
-                ['fab fa-instagram','#e4405f','https://instagram.com/apseshopping'],
-              ].map(([icon,color,url]) => (
-                <a key={icon} href={url} target="_blank" rel="noreferrer" style={{ width:36,height:36,borderRadius:'50%',border:'1px solid #444',display:'flex',alignItems:'center',justifyContent:'center',color:'#ccc',fontSize:14,transition:'all 0.2s',textDecoration:'none' }}
+              {[['fab fa-facebook-f','#3b5998','https://facebook.com/apseshopping'],['fab fa-twitter','#1da1f2','https://twitter.com/apseshopping'],['fab fa-instagram','#e4405f','https://instagram.com/apseshopping']].map(([icon,color,url]) => (
+                <a key={icon} href={url} target="_blank" rel="noreferrer" style={{ width:36,height:36,borderRadius:'50%',border:'1px solid #444',display:'flex',alignItems:'center',justifyContent:'center',color:'#ccc',fontSize:14,textDecoration:'none' }}
                   onMouseEnter={e => { e.currentTarget.style.background=color; e.currentTarget.style.borderColor=color; e.currentTarget.style.color='#fff'; }}
                   onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.borderColor='#444'; e.currentTarget.style.color='#ccc'; }}>
                   <i className={icon} />
@@ -296,16 +310,7 @@ export default function Layout({ children }) {
           <div>
             <h4 style={{ color:'#fff',fontSize:13,fontWeight:700,textTransform:'uppercase',letterSpacing:'1px',marginBottom:20,paddingBottom:10,borderBottom:'2px solid #2e6dce',display:'inline-block' }}>Information</h4>
             <ul style={{ listStyle:'none',padding:0,margin:0,display:'flex',flexDirection:'column',gap:2 }}>
-              {[
-                ['Disclaimer','/policies/disclaimer'],
-                ['Shipping Policy','/policies/shipping'],
-                ['Refund Policy','/policies/refund'],
-                ['Trademark & Copyright','/policies/copyright'],
-                ['Shopping Online For Festival','/retail'],
-                ['Privacy Policy & Cookies','/policies/privacy'],
-                ['Terms & Conditions','/policies/terms'],
-                ['Sitemap','/sitemap'],
-              ].map(([item, to]) => (
+              {[['Disclaimer','/policies/disclaimer'],['Shipping Policy','/policies/shipping'],['Refund Policy','/policies/refund'],['Trademark & Copyright','/policies/copyright'],['Shopping Online For Festival','/retail'],['Privacy Policy & Cookies','/policies/privacy'],['Terms & Conditions','/policies/terms'],['Sitemap','/sitemap']].map(([item, to]) => (
                 <li key={item}>
                   <Link to={to} style={{ color:'#aaa',fontSize:12,lineHeight:2,textDecoration:'none',display:'flex',alignItems:'center',gap:6 }}
                     onMouseEnter={e => e.currentTarget.style.color='#2e6dce'}
@@ -333,22 +338,34 @@ export default function Layout({ children }) {
             </ul>
           </div>
 
-          {/* Newsletter */}
+          {/* Newsletter — now functional */}
           <div>
             <h4 style={{ color:'#fff',fontSize:13,fontWeight:700,textTransform:'uppercase',letterSpacing:'1px',marginBottom:20,paddingBottom:10,borderBottom:'2px solid #2e6dce',display:'inline-block' }}>Newsletter</h4>
             <p style={{ fontSize:13,color:'#aaa',marginBottom:16,lineHeight:1.7 }}>Get all the latest information on events, sales and offers. Sign up for newsletter:</p>
-            <input type="email" placeholder="Email address"
-              style={{ width:'100%',padding:'11px 14px',border:'1px solid #444',background:'#2a2a2a',color:'#fff',borderRadius:3,fontSize:13,marginBottom:10,boxSizing:'border-box' }} />
-            <button style={{ background:'#2e6dce',color:'#fff',border:'none',padding:'11px 28px',borderRadius:3,fontSize:13,fontWeight:700,cursor:'pointer',letterSpacing:'0.5px' }}>
-              SUBSCRIBE
-            </button>
+            <form onSubmit={handleNewsletter}>
+              <input
+                type="email"
+                value={newsletterEmail}
+                onChange={e => { setNewsletterEmail(e.target.value); setNewsletterStatus(''); }}
+                placeholder="Email address"
+                style={{ width:'100%',padding:'11px 14px',border: newsletterStatus === 'error' ? '1px solid #e53e3e' : '1px solid #444',background:'#2a2a2a',color:'#fff',borderRadius:3,fontSize:13,marginBottom:10,boxSizing:'border-box' }}
+              />
+              <button type="submit" style={{ background:'#2e6dce',color:'#fff',border:'none',padding:'11px 28px',borderRadius:3,fontSize:13,fontWeight:700,cursor:'pointer',letterSpacing:'0.5px' }}>
+                SUBSCRIBE
+              </button>
+            </form>
+            {newsletterStatus === 'success' && (
+              <p style={{ color:'#22c55e',fontSize:12,marginTop:10 }}>✅ Subscribed! Thanks for signing up.</p>
+            )}
+            {newsletterStatus === 'error' && (
+              <p style={{ color:'#e53e3e',fontSize:12,marginTop:10 }}>⚠️ Please enter a valid email address.</p>
+            )}
           </div>
         </div>
 
         {/* Footer Bottom */}
         <div style={{ borderTop:'1px solid #2a2a2a',padding:'16px 40px',maxWidth:1300,margin:'0 auto',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:12 }}>
           <p style={{ fontSize:12,color:'#666' }}>© <a href="https://apseshopping.com" style={{ color:'#666' }}>Apseshopping</a> 2018. All Rights Reserved</p>
-          {/* Payment icons */}
           <div style={{ display:'flex',gap:6,alignItems:'center' }}>
             {['VISA','PayPal','stripe','VeriSign'].map(p => (
               <span key={p} style={{ background:'#fff',color:'#333',fontSize:10,fontWeight:800,padding:'4px 8px',borderRadius:3,letterSpacing:'0.5px' }}>{p}</span>

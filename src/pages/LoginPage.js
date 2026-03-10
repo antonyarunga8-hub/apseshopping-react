@@ -1,28 +1,18 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { useAuth } from '../context/AuthContext';
-import { useOrders } from '../context/OrderContext';
-
-// ── Niche config ──────────────────────────────────────────────────
-const NICHE_CONFIG = {
-  electronics:    { name: 'ApseElectronics',    color: '#2e6dce', icon: '📱', bg: 'linear-gradient(135deg,#1e40af,#2e6dce)' },
-  fashion:        { name: 'ApseFashion',         color: '#ec4899', icon: '👗', bg: 'linear-gradient(135deg,#be185d,#ec4899)' },
-  kitchen:        { name: 'ApseKitchen',         color: '#f59e0b', icon: '🍳', bg: 'linear-gradient(135deg,#b45309,#f59e0b)' },
-  furniture:      { name: 'ApseFurniture',       color: '#92400e', icon: '🛋️', bg: 'linear-gradient(135deg,#78350f,#b45309)' },
-  jewellery:      { name: 'ApseJewellery',       color: '#7c3aed', icon: '💍', bg: 'linear-gradient(135deg,#5b21b6,#7c3aed)' },
-  agriculture:    { name: 'ApseAgriculture',     color: '#16a34a', icon: '🌾', bg: 'linear-gradient(135deg,#14532d,#16a34a)' },
-  medical:        { name: 'ApseMedical',         color: '#ef4444', icon: '🏥', bg: 'linear-gradient(135deg,#b91c1c,#ef4444)' },
-  wholesale:      { name: 'ApseWholesale',       color: '#166534', icon: '📦', bg: 'linear-gradient(135deg,#14532d,#166534)' },
-};
+import { NICHE_CONFIG } from '../nicheConfig';
 
 export default function LoginPage() {
   const { login, user } = useAuth();
-  const { getOrdersByUser } = useOrders();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const nicheKey = searchParams.get('niche');
   const niCfg = nicheKey ? NICHE_CONFIG[nicheKey] : null;
+
+  const from = location.state?.from?.pathname;
 
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
@@ -45,48 +35,51 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    setTimeout(() => {
-      const result = login(form);
+    try {
+      const result = await login(form);
       if (result.success) {
-        // Redirect: niche login → niche page, otherwise home
-        navigate(nicheKey ? `/affiliate/${nicheKey}` : '/');
+        const destination = from || (nicheKey ? `/affiliate/${nicheKey}` : '/');
+        navigate(destination, { replace: true });
       } else {
         setError(result.error);
       }
+    } catch (err) {
+      setError('Something went wrong. Please try again.');
+    } finally {
       setLoading(false);
-    }, 600);
+    }
   };
 
   return (
     <Layout>
       <div style={{ minHeight: '70vh', background: '#f5f7fa', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
         <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.10)', width: '100%', maxWidth: 420, overflow: 'hidden' }}>
-
-          {/* Niche header or default header */}
           <div style={{ background: niCfg ? niCfg.bg : 'linear-gradient(135deg, #1a1a2e, #0f3460)', padding: '28px 32px', textAlign: 'center' }}>
             <div style={{ fontSize: 44, marginBottom: 8 }}>{niCfg ? niCfg.icon : '🛍️'}</div>
             <h2 style={{ fontSize: 20, fontWeight: 800, color: '#fff', marginBottom: 4 }}>
               {niCfg ? `Login to ${niCfg.name}` : 'Welcome Back to ApseShopping'}
             </h2>
             <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
-              {niCfg
-                ? `You'll access the ${niCfg.name} experience only`
-                : 'Full access to all 25 platforms & services'}
+              {niCfg ? `You'll access the ${niCfg.name} experience only` : 'Full access to all 25 platforms & services'}
             </p>
           </div>
 
           <div style={{ padding: '28px 32px' }}>
-            {/* Full vs Niche notice */}
+            {from && (
+              <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 6, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: '#92400e' }}>
+                🔒 Please log in to continue to <strong>{from}</strong>
+              </div>
+            )}
             {niCfg ? (
               <div style={{ background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: 6, padding: '10px 14px', marginBottom: 20, fontSize: 12, color: '#78350f' }}>
                 🔒 Logging in here gives you <strong>{niCfg.name}</strong> access only.
-                For full ApseShopping access, <Link to="/login" style={{ color: '#2e6dce', fontWeight: 700 }}>login at apseshopping.com</Link>
+                For full access, <Link to="/login" style={{ color: '#2e6dce', fontWeight: 700 }}>login at apseshopping.com</Link>
               </div>
-            ) : (
+            ) : !from ? (
               <div style={{ background: '#f0f4ff', border: '1px solid #bfdbfe', borderRadius: 6, padding: '10px 14px', marginBottom: 20, fontSize: 12, color: '#1e40af' }}>
                 ✅ Logging in here gives you <strong>full access</strong> to all 25 affiliate platforms & services.
               </div>
-            )}
+            ) : null}
 
             {error && (
               <div style={{ background: '#fff5f5', border: '1px solid #feb2b2', borderRadius: 4, padding: '10px 14px', marginBottom: 18, fontSize: 13, color: '#c53030' }}>

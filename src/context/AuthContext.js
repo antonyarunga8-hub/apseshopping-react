@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import bcrypt from 'bcryptjs';
 
 // ── Niche context ─────────────────────────────────────────────────
-// Detected from URL param ?niche=xxx or localStorage 'apse_niche'
+// Detected from URL param ?niche=xxx or sessionStorage 'apse_niche'
 // null = full ApseShopping experience
 // 'electronics' etc = niche-only experience
 export function detectNiche() {
@@ -13,6 +14,8 @@ export function detectNiche() {
   }
   return sessionStorage.getItem('apse_niche') || null;
 }
+
+const SALT_ROUNDS = 10;
 
 const AuthContext = createContext();
 
@@ -27,7 +30,6 @@ export function AuthProvider({ children }) {
     catch { return []; }
   });
 
-  // niche: null = full apseshopping, string = niche-only (e.g. 'electronics')
   const [niche, setNiche] = useState(() => detectNiche());
 
   useEffect(() => {
@@ -38,48 +40,70 @@ export function AuthProvider({ children }) {
     localStorage.setItem('apse_users', JSON.stringify(users));
   }, [users]);
 
-  // When user logs in from ApseShopping directly, clear any niche lock
-  const register = ({ name, email, phone, password, role = 'customer', nicheSource = null }) => {
+  // ── Register ────────────────────────────────────────────────────
+  // Hashes password with bcrypt before storing.
+  // Returns { success, error? }
+  const register = async ({ name, email, phone, password, role = 'customer', nicheSource = null }) => {
     if (users.find(u => u.email === email)) {
       return { success: false, error: 'An account with this email already exists.' };
     }
+
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+
     const newUser = {
-      id: Date.now(), name, email, phone, password,
-      role,           // 'customer' | 'vendor' | 'seller' | 'service_provider'
-      nicheSource,    // null = apseshopping, 'electronics' etc = came from niche site
+      id: Date.now(),
+      name,
+      email,
+      phone,
+      password: hashedPassword,   // ✅ never stored in plain text
+      role,
+      nicheSource,
       createdAt: new Date().toISOString(),
     };
+
     setUsers(prev => [...prev, newUser]);
+
+    // Strip password before putting in session state
     const { password: _, ...safeUser } = newUser;
     setUser(safeUser);
-    // If registering from ApseShopping (no niche), clear niche lock
+
     if (!nicheSource) {
       sessionStorage.removeItem('apse_niche');
       setNiche(null);
     }
+
     return { success: true };
   };
 
-  const login = ({ email, password }) => {
-    const found = users.find(u => u.email === email && u.password === password);
-    if (!found) return { success: false, error: 'Invalid email or password.' };
+  // ── Login ───────────────────────────────────────────────────────
+  // Uses bcrypt.compare so plain-text passwords never touch the comparison.
+  // Returns { success, error? }
+  const login = async ({ email, password }) => {
+    const found = users.find(u => u.email === email);
+    if (!found) {
+      return { success: false, error: 'Invalid email or password.' };
+    }
+
+    const match = await bcrypt.compare(password, found.password);
+    if (!match) {
+      return { success: false, error: 'Invalid email or password.' };
+    }
+
     const { password: _, ...safeUser } = found;
     setUser(safeUser);
-    // If user originally registered from ApseShopping (no nicheSource), clear niche lock
+
     if (!found.nicheSource && !detectNiche()) {
       sessionStorage.removeItem('apse_niche');
       setNiche(null);
     }
+
     return { success: true };
   };
 
   const logout = () => {
     setUser(null);
-    // Keep niche in session — they're still on the niche site
   };
 
-  // Computed: effective niche considering both URL and user account
-  // If user logged in from ApseShopping (no nicheSource) → full access regardless of URL
   const effectiveNiche = user && !user.nicheSource ? null : niche;
 
   return (

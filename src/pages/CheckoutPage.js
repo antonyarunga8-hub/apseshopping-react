@@ -1,9 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useOrders, generateOrder } from '../context/OrderContext';
+
+// Must mirror OrderContext constants exactly
+const SHIPPING_RATE_PER_KG = 40;
+const MIN_SHIPPING_PER_VENDOR = 49;
+
+const VENDOR_MAP = {
+  'digital-camera':  'V001',
+  'electronics':     'V001',
+  'kitchen':         'V002',
+  'home-appliances': 'V002',
+  'fashion':         'V003',
+};
+
+function getVendorGroups(cartItems) {
+  const groups = {};
+  cartItems.forEach(item => {
+    const vendorId = VENDOR_MAP[item.category] || 'V000';
+    if (!groups[vendorId]) groups[vendorId] = 0;
+    groups[vendorId] += (item.weightKg || 0.5) * item.qty;
+  });
+  return groups;
+}
+
+function estimateShipping(cartItems) {
+  if (!cartItems.length) return 0;
+  return Object.values(getVendorGroups(cartItems)).reduce((total, weightKg) => {
+    return total + Math.max(Math.round(weightKg * SHIPPING_RATE_PER_KG), MIN_SHIPPING_PER_VENDOR);
+  }, 0);
+}
 
 // ── Baby Bill Card ────────────────────────────────────────────────
 function BabyBill({ bill, index }) {
@@ -178,7 +207,8 @@ export default function CheckoutPage() {
   const [placedOrder, setPlacedOrder] = useState(null);
   const [errors, setErrors] = useState({});
 
-  const shipping = cartTotal >= 10000 ? 0 : 99;
+  const shipping = useMemo(() => estimateShipping(cartItems), [cartItems]);
+  const vendorCount = useMemo(() => Object.keys(getVendorGroups(cartItems)).length, [cartItems]);
   const total = cartTotal + shipping;
 
   const validate = () => {
@@ -300,12 +330,12 @@ export default function CheckoutPage() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#666', marginBottom: 12 }}>
                 <span>Shipping (est.)</span>
-                <span style={{ color: shipping === 0 ? '#22c55e' : '#333', fontWeight: 600 }}>{shipping === 0 ? 'FREE' : `₹${shipping}`}</span>
+                <span style={{ color: '#333', fontWeight: 600 }}>₹{shipping.toLocaleString()}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 17, color: '#222' }}>
                 <span>Total</span><span style={{ color: '#2e6dce' }}>₹{total.toLocaleString()}</span>
               </div>
-              <p style={{ fontSize: 11, color: '#aaa', marginTop: 8 }}>* Final shipping calculated per vendor after order placement</p>
+              <p style={{ fontSize: 11, color: '#aaa', marginTop: 8 }}>* Estimated shipping — split across {vendorCount} vendor(s) by weight</p>
             </div>
           </div>
         </div>

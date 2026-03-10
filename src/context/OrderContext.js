@@ -226,7 +226,7 @@ export function OrderProvider({ children }) {
   return (
     <OrderContext.Provider value={{
       orders, rfqs,
-      placeOrder, submitRFQ,
+      placeOrder, submitRFQ, setOrders,
       addRFQMessage, finalizeRFQInvoice, releaseRFQPayment,
       getOrdersByUser, getRFQsByUser,
     }}>

@@ -85,16 +85,14 @@ export default function CartPage() {
               <span>₹{cartTotal.toLocaleString()}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, fontSize: 14, color: '#666' }}>
-              <span>Shipping</span>
-              <span style={{ color: '#22c55e', fontWeight: 600 }}>{cartTotal >= 10000 ? 'FREE' : '₹99'}</span>
+              <span>Shipping (est.)</span>
+              <span style={{ fontWeight: 600, color: '#333' }}>Calculated at checkout</span>
             </div>
             <div style={{ borderTop: '1px solid #eee', paddingTop: 14, marginTop: 14, display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 17 }}>
-              <span>Total</span>
-              <span style={{ color: '#2e6dce' }}>₹{(cartTotal + (cartTotal >= 10000 ? 0 : 99)).toLocaleString()}</span>
+              <span>Subtotal</span>
+              <span style={{ color: '#2e6dce' }}>₹{cartTotal.toLocaleString()}</span>
             </div>
-            {cartTotal < 10000 && (
-              <p style={{ fontSize: 11, color: '#888', marginTop: 8 }}>Add ₹{(10000 - cartTotal).toLocaleString()} more for FREE shipping!</p>
-            )}
+            <p style={{ fontSize: 11, color: '#888', marginTop: 8 }}>* Weight-based shipping calculated per vendor at checkout</p>
             <Link to="/checkout">
               <button style={{ width: '100%', background: '#2e6dce', color: '#fff', border: 'none', padding: '14px', borderRadius: 4, fontWeight: 700, fontSize: 15, cursor: 'pointer', marginTop: 18, letterSpacing: 0.5 }}>
                 Proceed to Checkout →
