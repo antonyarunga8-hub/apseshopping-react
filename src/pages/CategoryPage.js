@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { useCart } from '../context/CartContext';
-import { ALL_PRODUCTS } from './ProductDetailPage';
+import { ALL_PRODUCTS } from '../data-products';
 
 // Slug → display name map
 const SLUG_TO_NAME = {

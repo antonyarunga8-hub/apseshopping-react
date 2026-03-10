@@ -5,9 +5,6 @@ import { useCart } from '../context/CartContext';
 import { ALL_PRODUCTS } from '../data-products';
 import Stars from '../components/Stars';
 
-// Re-export so CategoryPage (which already imports from here) doesn't break
-export { ALL_PRODUCTS };
-
 export default function ProductDetailPage() {
   const { id } = useParams();
   const { addToCart } = useCart();
