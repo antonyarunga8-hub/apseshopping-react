@@ -3,7 +3,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 // ── Mock vendor assignment ────────────────────────────────────────
 // In production this comes from the product database.
 // For now we assign vendors based on product category.
-const VENDOR_MAP = {
+// Exported so CheckoutPage can import instead of duplicating.
+export const VENDOR_MAP = {
   'digital-camera':   { id: 'V001', name: 'ApseElectronics Hub',   city: 'Bangalore',  gstin: '29AABCU9603R1ZP' },
   'electronics':      { id: 'V001', name: 'ApseElectronics Hub',   city: 'Bangalore',  gstin: '29AABCU9603R1ZP' },
   'kitchen':          { id: 'V002', name: 'KitchenWorld Supplies',  city: 'Mumbai',     gstin: '27AAKCS1234A1ZQ' },
@@ -12,8 +13,9 @@ const VENDOR_MAP = {
   'default':          { id: 'V000', name: 'ApseShopping Warehouse', city: 'Hubli',      gstin: '29AAPSE0001A1Z0' },
 };
 
-// Mock shipping rates per vendor (₹ per kg, approx)
-const SHIPPING_RATE_PER_KG = 40;
+// Exported so CheckoutPage can import instead of duplicating.
+export const SHIPPING_RATE_PER_KG = 40;
+export const MIN_SHIPPING_PER_VENDOR = 49;
 
 function getVendorForProduct(product) {
   return VENDOR_MAP[product.category] || VENDOR_MAP['default'];
@@ -75,7 +77,7 @@ export function generateOrder({ cartItems, shipping, form, userId }) {
       };
     });
 
-    const vendorShipping = Math.max(Math.round(totalWeightKg * SHIPPING_RATE_PER_KG), 49);
+    const vendorShipping = Math.max(Math.round(totalWeightKg * SHIPPING_RATE_PER_KG), MIN_SHIPPING_PER_VENDOR);
     const billTotal = subtotal + vendorShipping;
 
     return {
@@ -226,7 +228,7 @@ export function OrderProvider({ children }) {
   return (
     <OrderContext.Provider value={{
       orders, rfqs,
-      placeOrder, submitRFQ, setOrders,
+      placeOrder, submitRFQ, setOrders, setRfqs,
       addRFQMessage, finalizeRFQInvoice, releaseRFQPayment,
       getOrdersByUser, getRFQsByUser,
     }}>

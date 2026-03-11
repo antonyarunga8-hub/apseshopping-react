@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
+import { useToast } from '../context/ToastContext';
 import { ALL_PRODUCTS } from '../data-products';
 
 // Slug → display name map
@@ -50,11 +52,18 @@ const CATEGORY_ICONS = {
 function ProductCard({ product }) {
   const [added, setAdded] = useState(false);
   const { addToCart } = useCart();
+  const { toggleWishlist, isWishlisted } = useWishlist();
+  const { success } = useToast();
   const pct = Math.round(((product.oldPrice - product.newPrice) / product.oldPrice) * 100);
+  const wishlisted = isWishlisted(product.id);
   return (
-    <div style={{ border: '1px solid #e8e8e8', borderRadius: 6, background: '#fff', overflow: 'hidden', transition: 'box-shadow 0.2s,transform 0.2s' }}
+    <div style={{ border: '1px solid #e8e8e8', borderRadius: 6, background: '#fff', overflow: 'hidden', transition: 'box-shadow 0.2s,transform 0.2s', position: 'relative' }}
       onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.12)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
       onMouseLeave={e => { e.currentTarget.style.boxShadow = ''; e.currentTarget.style.transform = ''; }}>
+      <button onClick={() => { const r = toggleWishlist(product); success(r ? '❤️ Added to wishlist' : '💔 Removed from wishlist'); }}
+        style={{ position: 'absolute', top: 10, right: 10, zIndex: 3, background: '#fff', border: '1px solid #eee', borderRadius: '50%', width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 15, boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}>
+        {wishlisted ? '❤️' : '🤍'}
+      </button>
       <Link to={`/product-info/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
         <div style={{ position: 'relative', background: product.img ? '#f9f9f9' : '#e8f0fe', height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <span style={{ position: 'absolute', top: 10, left: 10, background: '#e53e3e', color: '#fff', fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 3 }}>{pct}% OFF</span>
@@ -72,7 +81,7 @@ function ProductCard({ product }) {
       </Link>
       <div style={{ padding: '4px 14px 14px', display: 'flex', gap: 8 }}>
         <button
-          onClick={() => { addToCart(product); setAdded(true); setTimeout(() => setAdded(false), 2000); }}
+          onClick={() => { addToCart(product); setAdded(true); success('🛒 Added to cart!'); setTimeout(() => setAdded(false), 2000); }}
           style={{ flex: 1, background: added ? '#22c55e' : '#333', color: '#fff', border: 'none', padding: '9px', borderRadius: 3, fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' }}>
           {added ? '✓ Added!' : 'Add to Cart'}
         </button>

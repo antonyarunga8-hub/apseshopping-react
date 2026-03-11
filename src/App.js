@@ -20,6 +20,7 @@ import RFQDetailPage from './pages/RFQDetailPage';
 import AdminPage from './pages/AdminPage';
 import { PolicyPage, AboutPage } from './pages/PolicyPages';
 import PrivateRoute from './components/PrivateRoute';
+import AdminRoute from './components/AdminRoute';
 import './App.css';
 
 // All context providers are in index.js — no need to wrap again here.
@@ -59,7 +60,7 @@ function App() {
           <PrivateRoute><RFQDetailPage /></PrivateRoute>
         } />
         <Route path="/admin" element={
-          <PrivateRoute><AdminPage /></PrivateRoute>
+          <AdminRoute><AdminPage /></AdminRoute>
         } />
       </Routes>
     </Router>

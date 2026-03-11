@@ -38,7 +38,7 @@ export default function RegisterPage() {
         password: form.password, nicheSource: nicheKey || null,
       });
       if (result.success) {
-        navigate(nicheKey ? `/affiliate/${nicheKey}` : '/');
+        navigate('/');
       } else {
         setError(result.error);
       }

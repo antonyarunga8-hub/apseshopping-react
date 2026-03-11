@@ -49,7 +49,7 @@ export default function Layout({ children }) {
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterStatus, setNewsletterStatus] = useState(''); // '' | 'success' | 'error'
   const { cartItems, removeFromCart, cartCount, cartTotal } = useCart();
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const { wishlistCount } = useWishlist();
   const location = useLocation();
   const navigate = useNavigate();
@@ -59,7 +59,8 @@ export default function Layout({ children }) {
     e.preventDefault();
     const q = searchQuery.trim();
     if (!q) return;
-    navigate(`/retail?q=${encodeURIComponent(q)}`);
+    navigate(`/search?q=${encodeURIComponent(q)}`);
+    setSearchQuery('');
   };
 
   const handleNewsletter = (e) => {
@@ -128,8 +129,8 @@ export default function Layout({ children }) {
               <div style={{ display:'flex',justifyContent:'space-between',fontWeight:700,marginBottom:14,fontSize:15 }}>
                 <span>SUBTOTAL:</span><span>₹{cartTotal.toLocaleString()}</span>
               </div>
-              <Link to="/view-cart"><button style={{ width:'100%',padding:'11px',background:'#555',color:'#fff',border:'none',fontWeight:700,cursor:'pointer',marginBottom:8,borderRadius:3 }}>View Cart</button></Link>
-              <Link to="/checkout"><button style={{ width:'100%',padding:'11px',background:'#2e6dce',color:'#fff',border:'none',fontWeight:700,cursor:'pointer',borderRadius:3 }}>Checkout</button></Link>
+              <Link to="/view-cart" onClick={() => setCartOpen(false)}><button style={{ width:'100%',padding:'11px',background:'#555',color:'#fff',border:'none',fontWeight:700,cursor:'pointer',marginBottom:8,borderRadius:3 }}>View Cart</button></Link>
+              <Link to="/checkout" onClick={() => setCartOpen(false)}><button style={{ width:'100%',padding:'11px',background:'#2e6dce',color:'#fff',border:'none',fontWeight:700,cursor:'pointer',borderRadius:3 }}>Checkout</button></Link>
             </div>
           </div>
         </div>
@@ -241,7 +242,7 @@ export default function Layout({ children }) {
           { to:'/services', label:'SERVICES & PRE OWNED' },
           { to:'/import-export', label:'IMPORT & EXPORT', special:true },
           { to:'/contact-us', label:'CONTACT US' },
-          { to:'/admin', label:'⚙️ ADMIN', special:false },
+          ...(isAdmin ? [{ to:'/admin', label:'⚙️ ADMIN', special:false }] : []),
         ].map(item => (
           <Link key={item.to} to={item.to}
             style={{ color:'#fff',padding:'14px 14px',fontSize:12,fontWeight:600,letterSpacing:'0.3px',display:'flex',alignItems:'center',textDecoration:'none',whiteSpace:'nowrap',background: isActive(item.to) ? '#2e6dce' : item.special ? '#7c3aed' : 'transparent',borderBottom: isActive(item.to) ? '3px solid #60a5fa' : '3px solid transparent',transition:'all 0.2s' }}

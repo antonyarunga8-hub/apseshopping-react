@@ -3,24 +3,12 @@ import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { useOrders, generateOrder } from '../context/OrderContext';
-
-// Must mirror OrderContext constants exactly
-const SHIPPING_RATE_PER_KG = 40;
-const MIN_SHIPPING_PER_VENDOR = 49;
-
-const VENDOR_MAP = {
-  'digital-camera':  'V001',
-  'electronics':     'V001',
-  'kitchen':         'V002',
-  'home-appliances': 'V002',
-  'fashion':         'V003',
-};
+import { useOrders, generateOrder, VENDOR_MAP, SHIPPING_RATE_PER_KG, MIN_SHIPPING_PER_VENDOR } from '../context/OrderContext';
 
 function getVendorGroups(cartItems) {
   const groups = {};
   cartItems.forEach(item => {
-    const vendorId = VENDOR_MAP[item.category] || 'V000';
+    const vendorId = (VENDOR_MAP[item.category] || VENDOR_MAP['default']).id;
     if (!groups[vendorId]) groups[vendorId] = 0;
     groups[vendorId] += (item.weightKg || 0.5) * item.qty;
   });

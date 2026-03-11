@@ -38,7 +38,7 @@ export default function LoginPage() {
     try {
       const result = await login(form);
       if (result.success) {
-        const destination = from || (nicheKey ? `/affiliate/${nicheKey}` : '/');
+        const destination = from || '/';
         navigate(destination, { replace: true });
       } else {
         setError(result.error);

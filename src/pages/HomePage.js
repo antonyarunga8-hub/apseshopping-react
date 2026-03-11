@@ -32,6 +32,27 @@ const topCategories = [
 const featuredProducts = ALL_PRODUCTS.filter(p => FEATURED_IDS.includes(p.id));
 const newArrivals = ALL_PRODUCTS.filter(p => NEW_ARRIVAL_IDS.includes(p.id));
 
+// IDs already shown in the top grids — exclude from the 4-col section below
+const alreadyShownIds = new Set([...FEATURED_IDS, ...NEW_ARRIVAL_IDS]);
+const remainingProducts = ALL_PRODUCTS.filter(p => !alreadyShownIds.has(p.id));
+
+// Partition remainingProducts into 4 DISTINCT non-overlapping groups
+// so the 4-col grid NEVER shows the same product twice across columns.
+// Split evenly: distribute as evenly as possible regardless of total count.
+const _splitFour = (arr) => {
+  const n = arr.length;
+  const base = Math.floor(n / 4);
+  const extra = n % 4; // first `extra` columns get one more item
+  let i = 0;
+  return [0, 1, 2, 3].map(col => {
+    const size = base + (col < extra ? 1 : 0);
+    const slice = arr.slice(i, i + size);
+    i += size;
+    return slice;
+  });
+};
+const [col1Products, col2Products, col3Products, col4Products] = _splitFour(remainingProducts);
+
 function HeroSlider() {
   const [cur, setCur] = useState(0);
   const [errors, setErrors] = useState({});
@@ -249,10 +270,10 @@ export default function HomePage() {
       <div style={{ background:'#f9f9f9',padding:'36px 20px' }}>
         <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:24,maxWidth:1400,margin:'0 auto' }}>
           {[
-            ['FEATURED PRODUCTS', [...featuredProducts].reverse()],
-            ['BEST SELLING PRODUCTS', featuredProducts],
-            ['LATEST PRODUCTS', featuredProducts],
-            ['TOP RATED PRODUCTS', [...featuredProducts].reverse()],
+            ['FEATURED PRODUCTS',    col1Products],
+            ['BEST SELLING PRODUCTS', col2Products],
+            ['LATEST PRODUCTS',      col3Products],
+            ['TOP RATED PRODUCTS',   col4Products],
           ].map(([title, prods]) => (
             <div key={title}>
               <h3 style={{ fontSize:13,fontWeight:700,color:'#222',textTransform:'uppercase',letterSpacing:'0.8px',marginBottom:18,paddingBottom:10,borderBottom:'2px solid #e8e8e8' }}>{title}</h3>

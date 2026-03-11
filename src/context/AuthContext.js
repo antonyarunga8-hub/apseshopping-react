@@ -43,6 +43,8 @@ export function AuthProvider({ children }) {
   // ── Register ────────────────────────────────────────────────────
   // Hashes password with bcrypt before storing.
   // Returns { success, error? }
+  // To create an admin: call register({ ..., role: 'admin' })
+  // Admin role is never set from UI — only programmatically or by seeding.
   const register = async ({ name, email, phone, password, role = 'customer', nicheSource = null }) => {
     if (users.find(u => u.email === email)) {
       return { success: false, error: 'An account with this email already exists.' };
@@ -106,8 +108,10 @@ export function AuthProvider({ children }) {
 
   const effectiveNiche = user && !user.nicheSource ? null : niche;
 
+  const isAdmin = user?.role === 'admin';
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, niche: effectiveNiche, rawNiche: niche, setNiche }}>
+    <AuthContext.Provider value={{ user, login, register, logout, niche: effectiveNiche, rawNiche: niche, setNiche, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

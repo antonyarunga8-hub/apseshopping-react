@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { useCart } from '../context/CartContext';
+import { useToast } from '../context/ToastContext';
 import { ALL_PRODUCTS } from '../data-products';
 import Stars from '../components/Stars';
 
 export default function ProductDetailPage() {
   const { id } = useParams();
   const { addToCart } = useCart();
+  const { success } = useToast();
   const navigate = useNavigate();
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
@@ -33,13 +35,14 @@ export default function ProductDetailPage() {
   const related = ALL_PRODUCTS.filter(p => p.id !== product.id && p.cats?.some(c => product.cats?.includes(c))).slice(0, 4);
 
   const handleAddToCart = () => {
-    addToCart({ ...product, qty: 1 }, qty);
+    addToCart(product, qty);
     setAdded(true);
     setTimeout(() => setAdded(false), 2500);
   };
 
   const handleBuyNow = () => {
-    addToCart({ ...product, qty: 1 }, qty);
+    addToCart(product, qty);
+    success(`⚡ Buying ${qty > 1 ? qty + '× ' : ''}${product.name.slice(0, 30)}...`);
     navigate('/checkout');
   };
 

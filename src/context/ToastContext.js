@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 
 const ToastContext = createContext();
 
@@ -7,6 +7,13 @@ let toastId = 0;
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
   const timersRef = useRef({});
+
+  // Clear all timers on unmount to prevent setState on unmounted component
+  useEffect(() => {
+    return () => {
+      Object.values(timersRef.current).forEach(clearTimeout);
+    };
+  }, []);
 
   const dismiss = useCallback((id) => {
     setToasts(prev => prev.map(t => t.id === id ? { ...t, exiting: true } : t));

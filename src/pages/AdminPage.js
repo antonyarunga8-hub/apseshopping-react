@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { useOrders } from '../context/OrderContext';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 
 const ORDER_STATUSES = ['confirmed', 'packed', 'shipped', 'delivered'];
 const BILL_STATUSES  = ['confirmed', 'packed', 'shipped', 'delivered'];
@@ -16,6 +17,7 @@ const STATUS_COLOR = {
 export default function AdminPage() {
   const { orders, rfqs, setOrders } = useOrders();
   const { success } = useToast();
+  const { isAdmin } = useAuth();
   const [tab, setTab] = useState('orders');
   const [search, setSearch] = useState('');
   const [expandedOrder, setExpandedOrder] = useState(null);
@@ -64,6 +66,19 @@ export default function AdminPage() {
     delivered: orders.filter(o => o.status === 'delivered').length,
     openRFQs: rfqs.filter(r => r.status === 'open').length,
   };
+
+  if (!isAdmin) {
+    return (
+      <Layout>
+        <div style={{ textAlign: 'center', padding: '80px 20px' }}>
+          <div style={{ fontSize: 64, marginBottom: 16 }}>🚫</div>
+          <h2 style={{ fontWeight: 700, marginBottom: 8 }}>Access Denied</h2>
+          <p style={{ color: '#666', marginBottom: 24 }}>You do not have admin privileges to view this page.</p>
+          <Link to="/"><button style={{ background: '#2e6dce', color: '#fff', border: 'none', padding: '12px 32px', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}>Go to Home</button></Link>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
