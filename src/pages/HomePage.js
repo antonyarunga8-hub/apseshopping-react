@@ -38,20 +38,18 @@ const remainingProducts = ALL_PRODUCTS.filter(p => !alreadyShownIds.has(p.id));
 
 // Partition remainingProducts into 4 DISTINCT non-overlapping groups
 // so the 4-col grid NEVER shows the same product twice across columns.
-// Split evenly: distribute as evenly as possible regardless of total count.
-const _splitFour = (arr) => {
-  const n = arr.length;
-  const base = Math.floor(n / 4);
-  const extra = n % 4; // first `extra` columns get one more item
-  let i = 0;
-  return [0, 1, 2, 3].map(col => {
-    const size = base + (col < extra ? 1 : 0);
-    const slice = arr.slice(i, i + size);
-    i += size;
-    return slice;
-  });
-};
-const [col1Products, col2Products, col3Products, col4Products] = _splitFour(remainingProducts);
+const _base = Math.floor(remainingProducts.length / 4);
+const _extra = remainingProducts.length % 4;
+const _sizes = [0, 1, 2, 3].map(col => _base + (col < _extra ? 1 : 0));
+const _s0 = 0;
+const _s1 = _s0 + _sizes[0];
+const _s2 = _s1 + _sizes[1];
+const _s3 = _s2 + _sizes[2];
+const _s4 = _s3 + _sizes[3];
+const col1Products = remainingProducts.slice(_s0, _s1);
+const col2Products = remainingProducts.slice(_s1, _s2);
+const col3Products = remainingProducts.slice(_s2, _s3);
+const col4Products = remainingProducts.slice(_s3, _s4);
 
 function HeroSlider() {
   const [cur, setCur] = useState(0);
