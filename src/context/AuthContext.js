@@ -1,10 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import bcrypt from 'bcryptjs';
 
 // ── Niche context ─────────────────────────────────────────────────
-// Detected from URL param ?niche=xxx or sessionStorage 'apse_niche'
-// null = full ApseShopping experience
-// 'electronics' etc = niche-only experience
 export function detectNiche() {
   const params = new URLSearchParams(window.location.search);
   const urlNiche = params.get('niche');
@@ -15,8 +11,43 @@ export function detectNiche() {
   return sessionStorage.getItem('apse_niche') || null;
 }
 
-const SALT_ROUNDS = 10;
+// ── Web Crypto password hashing (replaces bcryptjs — no Node polyfill needed) ──
+// Uses PBKDF2 via browser-native crypto.subtle. No external dependency.
+// Format stored: "pbkdf2:<hex-salt>:<hex-hash>"
 
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const saltBytes = crypto.getRandomValues(new Uint8Array(16));
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']
+  );
+  const hashBuffer = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt: saltBytes, iterations: 100000, hash: 'SHA-256' },
+    keyMaterial, 256
+  );
+  const toHex = buf => Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return 'pbkdf2:' + toHex(saltBytes) + ':' + toHex(hashBuffer);
+}
+
+async function verifyPassword(password, stored) {
+  // Support legacy plain-text passwords stored before hashing was added
+  if (!stored.startsWith('pbkdf2:')) return password === stored;
+  const parts = stored.split(':');
+  if (parts.length !== 3) return false;
+  const saltBytes = Uint8Array.from(parts[1].match(/.{2}/g).map(h => parseInt(h, 16)));
+  const encoder = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']
+  );
+  const hashBuffer = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt: saltBytes, iterations: 100000, hash: 'SHA-256' },
+    keyMaterial, 256
+  );
+  const toHex = buf => Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return toHex(hashBuffer) === parts[2];
+}
+
+// ── Auth Context ──────────────────────────────────────────────────
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
@@ -41,23 +72,19 @@ export function AuthProvider({ children }) {
   }, [users]);
 
   // ── Register ────────────────────────────────────────────────────
-  // Hashes password with bcrypt before storing.
-  // Returns { success, error? }
-  // To create an admin: call register({ ..., role: 'admin' })
-  // Admin role is never set from UI — only programmatically or by seeding.
   const register = async ({ name, email, phone, password, role = 'customer', nicheSource = null }) => {
     if (users.find(u => u.email === email)) {
       return { success: false, error: 'An account with this email already exists.' };
     }
 
-    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+    const hashedPassword = await hashPassword(password);
 
     const newUser = {
       id: Date.now(),
       name,
       email,
       phone,
-      password: hashedPassword,   // ✅ never stored in plain text
+      password: hashedPassword,   // stored as pbkdf2:<salt>:<hash>
       role,
       nicheSource,
       createdAt: new Date().toISOString(),
@@ -65,7 +92,6 @@ export function AuthProvider({ children }) {
 
     setUsers(prev => [...prev, newUser]);
 
-    // Strip password before putting in session state
     const { password: _, ...safeUser } = newUser;
     setUser(safeUser);
 
@@ -77,16 +103,14 @@ export function AuthProvider({ children }) {
     return { success: true };
   };
 
-  // ── Login ───────────────────────────────────────────────────────
-  // Uses bcrypt.compare so plain-text passwords never touch the comparison.
-  // Returns { success, error? }
+  // ── Login ────────────────────────────────────────────────────────
   const login = async ({ email, password }) => {
     const found = users.find(u => u.email === email);
     if (!found) {
       return { success: false, error: 'Invalid email or password.' };
     }
 
-    const match = await bcrypt.compare(password, found.password);
+    const match = await verifyPassword(password, found.password);
     if (!match) {
       return { success: false, error: 'Invalid email or password.' };
     }
@@ -102,12 +126,9 @@ export function AuthProvider({ children }) {
     return { success: true };
   };
 
-  const logout = () => {
-    setUser(null);
-  };
+  const logout = () => setUser(null);
 
   const effectiveNiche = user && !user.nicheSource ? null : niche;
-
   const isAdmin = user?.role === 'admin';
 
   return (
